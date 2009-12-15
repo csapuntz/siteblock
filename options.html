@@ -1,0 +1,61 @@
+<html>
+<head><title>SiteBlock Extension Options</title></head>
+<script type="text/javascript">
+// <!-- 
+
+function save_options() {
+  localStorage['siteblock_list'] = document.getElementById("siteblock_list").value;
+
+  chrome.extension.getBackgroundPage().updatePaths();
+	
+  // Update status to let user know options were saved.
+  var status = document.getElementById("status");
+  status.innerHTML = "Options Saved.";
+  setTimeout(function() {
+    status.innerHTML = "";
+  }, 750);
+
+}
+
+function restore_options() {
+  var list = localStorage['siteblock_list'];
+  if (list !== undefined) {
+      document.getElementById("siteblock_list").value = list;
+  }
+}
+
+// !-->
+</script>
+ 
+<body onload="restore_options()">
+	<div id="status"></div>
+	<form>
+	Sites to Block:<br />
+	<textarea id="siteblock_list" cols="60" rows="15"></textarea>
+	<br />
+	<input type="button" onclick="save_options()" value="Save Options" />
+        </form>
+
+<h2>Help</h2>
+
+<p>List the websites you want to block, one per line. For example:
+<pre>
+cnn.com
+nytimes.com
+google.com/news
+</pre>
+</p>
+
+<p>If you would like to block all sites except for a select few, enter a '*'
+on the first line and the websites you wish to allow with a '+' before each line. For example:
+<pre>
+*
++stackoverflow.com
++msdn.microsoft.com
+</pre>
+</p>
+
+<p>If you found this software useful, consider <a href="http://sites.google.com/site/siteblockchrome/donate">making a donation</a>.</p>
+
+</body>
+</html>

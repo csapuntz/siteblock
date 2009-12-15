@@ -1,0 +1,10 @@
+{
+   "name": "SiteBlock",
+   "version": "0.1.3",
+   "description": "Block sites to discourage procrastination",
+   "options_page": "options.html",
+   "background_page": "background.html",
+   "permissions": [ 
+      "tabs"
+   ]
+}
