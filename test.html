@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
+<html>
+<head>
+<!-- Combo-handled YUI CSS files: -->
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?2.8.0r4/build/logger/assets/skins/sam/logger.css&2.8.0r4/build/yuitest/assets/skins/sam/yuitest.css" />
+<!-- Combo-handled YUI JS files: -->
+<script type="text/javascript" src="http://yui.yahooapis.com/combo?2.8.0r4/build/yahoo-dom-event/yahoo-dom-event.js&2.8.0r4/build/logger/logger-min.js&2.8.0r4/build/yuitest/yuitest-min.js"></script>
+<script type="text/javascript" src="background.js" />
+
+<script type="text/javascript">
+// <!-- 
+
+YAHOO.namespace("gmail.csapuntz");
+
+YAHOO.gmail.csapuntz.TestCase = new YAHOO.tool.TestCase({
+   name : "Sample Tests",
+
+   testDummy : function () {
+        var Assert = YAHOO.util.Assert;
+
+        Assert.areEqual(0, 0);
+   }
+   });
+
+YAHOO.util.Event.onDOMReady(function (){
+
+    //create the logger
+    var logger = new YAHOO.tool.TestLogger();
+    
+    //add the test suite to the runner's queue
+    YAHOO.tool.TestRunner.add(YAHOO.gmail.csapuntz.TestCase);
+
+    //run the tests
+    YAHOO.tool.TestRunner.run();
+});
+
+// -->
+</script>
+
+</head>
+<body class="yui-skin-sam">
+</body>
+</html>
+
