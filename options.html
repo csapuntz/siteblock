@@ -1,13 +1,18 @@
 <html>
-<head><title>SiteBlock Extension Options</title></head>
+    <head><title>SiteBlock Extension Options</title></head>
+
+<script type="text/javascript" src="siteblock.js" />
 <script type="text/javascript">
 // <!-- 
 
-function save_options() {
-  localStorage['siteblock_list'] = document.getElementById("siteblock_list").value;
 
-  chrome.extension.getBackgroundPage().updatePaths();
-	
+function save_options() {
+  localStorage[csapuntz.siteblock.LIST] = document.getElementById('siteblock_list').value;
+  localStorage[csapuntz.siteblock.ALLOWED] = document.getElementById('allowed').value;
+  localStorage[csapuntz.siteblock.PERIOD] = document.getElementById('period').value; 
+
+  chrome.extension.getBackgroundPage().onOptionsChanged();
+
   // Update status to let user know options were saved.
   var status = document.getElementById("status");
   status.innerHTML = "Options Saved.";
@@ -18,10 +23,22 @@ function save_options() {
 }
 
 function restore_options() {
-  var list = localStorage['siteblock_list'];
+  var list = localStorage[csapuntz.siteblock.LIST];
   if (list !== undefined) {
-      document.getElementById("siteblock_list").value = list;
+    document.getElementById("siteblock_list").value = list;
   }
+
+  var allowed = localStorage[csapuntz.siteblock.ALLOWED];
+  if (allowed === undefined) 
+      allowed = "0";
+
+  document.getElementById("allowed").value = allowed;
+
+  var period = localStorage[csapuntz.siteblock.PERIOD];
+  if (period === undefined)
+      period = "1440";
+
+  document.getElementById("period").value = period;
 }
 
 // !-->
@@ -31,8 +48,10 @@ function restore_options() {
 	<div id="status"></div>
 	<form>
 	Sites to Block:<br />
-	<textarea id="siteblock_list" cols="60" rows="15"></textarea>
-	<br />
+	<textarea spellcheck="false" id="siteblock_list" cols="60" rows="15"></textarea>
+        <br />
+        Unblock for <input type="text" id="allowed" cols="6" /> every <input type="text" id="period" cols="6" /> minutes.
+        <br />
 	<input type="button" onclick="save_options()" value="Save Options" />
         </form>
 

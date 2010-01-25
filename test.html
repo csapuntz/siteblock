@@ -5,22 +5,161 @@
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?2.8.0r4/build/logger/assets/skins/sam/logger.css&2.8.0r4/build/yuitest/assets/skins/sam/yuitest.css" />
 <!-- Combo-handled YUI JS files: -->
 <script type="text/javascript" src="http://yui.yahooapis.com/combo?2.8.0r4/build/yahoo-dom-event/yahoo-dom-event.js&2.8.0r4/build/logger/logger-min.js&2.8.0r4/build/yuitest/yuitest-min.js"></script>
-<script type="text/javascript" src="background.js" />
+<script type="text/javascript" src="siteblock.js"></script>
 
 <script type="text/javascript">
 // <!-- 
 
-YAHOO.namespace("gmail.csapuntz");
+YAHOO.namespace("csapuntz");
 
-YAHOO.gmail.csapuntz.TestCase = new YAHOO.tool.TestCase({
+var Assert = YAHOO.util.Assert;
+
+function newTracker() {
+   var ut = csapuntz.siteblock.newUsageTracker();
+   ut.test_time = 0;
+   
+   ut.setTimeCallback(function() {
+      return ut.test_time;
+      });
+
+   ut.setInterval(1, 10);
+
+   return ut;
+}
+
+function assertArrayEqual(a, b, msg) {
+    if (a.length != b.length) {
+       Assert.fail( msg );
+       return;
+    }
+
+    for (var i = 0 ; i < a.length; ++i) {
+       Assert.areSame(a[i], b[i], msg);
+    }
+}
+
+YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
    name : "Sample Tests",
 
    testDummy : function () {
-        var Assert = YAHOO.util.Assert;
-
         Assert.areEqual(0, 0);
-   }
-   });
+   },
+
+   testBlack : function () {
+     var sb = csapuntz.siteblock.newSiteBlock();
+     sb.updatePaths("google.com\ncnn");
+     Assert.areEqual(sb.isBlocked("http://google.com"), true, "http://google.com");
+     Assert.areEqual(sb.isBlocked("https://cnn.com"), true, "https://cnn.com");
+     Assert.areEqual(sb.isBlocked("http://www.apple.com"), false, "http://www.apple.com");
+     Assert.areEqual(sb.isBlocked("file://c:/Windows/system32"), false, "file://c:/...");
+   },
+
+   testWhite: function() {
+     var sb = csapuntz.siteblock.newSiteBlock();
+     sb.updatePaths("*\n+google.com");
+     Assert.areEqual(sb.isBlocked("http://google.com"), false, "http://google.com");
+     Assert.areEqual(sb.isBlocked("https://cnn.com"), true, "https://cnn.com");
+     Assert.areEqual(sb.isBlocked("http://www.apple.com"), true, "http://www.apple.com");
+     Assert.areEqual(sb.isBlocked("file://c:/Windows/system32"), false, "file://");
+   },
+
+   testUsageTracker : function() {
+      var ut = newTracker();
+
+      Assert.areEqual(ut.allowed(), true, "initial");
+
+      ut.test_time += 20;
+      
+      var e = ut.start();
+
+      Assert.areEqual(ut.allowed(), true, "started");
+
+      ut.test_time += 40;
+
+      e();
+
+      Assert.areEqual(ut.allowed(), true, "ended");
+      ut.test_time += 40;
+
+      e = ut.start();
+      Assert.areEqual(ut.allowed(), true, "started2");
+
+      ut.test_time += 40;
+      Assert.areEqual(ut.allowed(), false, "pre-ended2");
+
+      e();
+
+      Assert.areEqual(ut.allowed(), false, "ended2");
+
+      ut.test_time += 540;
+      Assert.areEqual(ut.allowed(), true, "afterwait");
+
+      e = ut.start();
+      Assert.areEqual(ut.allowed(), true, "started3");
+
+      ut.test_time += 20;
+      e();
+      ut.test_time += 20;
+      e = ut.start();
+      ut.test_time += 41;
+      Assert.areEqual(ut.allowed(), false, "expired-again");
+   },
+
+   testLongInterval : function() {
+      var ut = newTracker();
+
+      var e = ut.start();
+      ut.test_time += 1000;
+      Assert.areEqual(ut.allowed(), false, "testLongInterval1");
+ 
+      e();
+      Assert.areEqual(ut.allowed(), false, "testLongInterval2");
+   },
+
+   testTimer: function() {
+     var sb = csapuntz.siteblock.newSiteBlock();
+
+     var time = 100;
+
+     sb.updatePaths("google.com");
+     // 15 minutes a day allowed
+     sb.setAllowedUsage(1, 10);
+     sb.setTimeCallback(function() {
+             return time;
+        });
+
+     // Visit google at 100 seconds
+     sb.onTabUpdate(1, "http://www.google.com");
+     Assert.areEqual(sb.isTabBlocked(1), false, "mon1");
+
+     time += 30;
+
+     sb.onTabUpdate(1, "http://www.apple.com");
+     Assert.areEqual(sb.isTabBlocked(1), false, "ok1");
+
+     time += 120;
+
+     sb.onTabUpdate(1, "http://www.google.com");
+     Assert.areEqual(sb.isTabBlocked(1), false, "mon2");
+      
+     time += 60;
+     Assert.areEqual(sb.isTabBlocked(1), true, "timeout");
+     assertArrayEqual(sb.getBlockedTabs(), [1], "getblockedtabs");
+
+     sb.onTabUpdate(1, null);
+
+     sb.onTabUpdate(2, "http://www.google.com");
+     Assert.areEqual(sb.isTabBlocked(2), true, "mon3");
+     sb.onTabUpdate(2, null);
+
+     sb.onTabUpdate(2, "http://www.apple.com");
+     Assert.areEqual(sb.isTabBlocked(2), false, "ok2");
+
+     time += 600;
+     sb.onTabUpdate(2, "http://www.google.com");
+     Assert.areEqual(sb.isTabBlocked(2), false, "mon4");
+   },
+});
 
 YAHOO.util.Event.onDOMReady(function (){
 
@@ -28,7 +167,7 @@ YAHOO.util.Event.onDOMReady(function (){
     var logger = new YAHOO.tool.TestLogger();
     
     //add the test suite to the runner's queue
-    YAHOO.tool.TestRunner.add(YAHOO.gmail.csapuntz.TestCase);
+    YAHOO.tool.TestRunner.add(YAHOO.csapuntz.TestCase);
 
     //run the tests
     YAHOO.tool.TestRunner.run();

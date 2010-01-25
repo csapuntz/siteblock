@@ -1,57 +1,48 @@
-if (typeof csapuntz == "undefined") {
-    var csapuntz = {};
+var sb = csapuntz.siteblock.newSiteBlock();
+
+function block(id, tab_url)
+{
+   chrome.tabs.update(id, 
+           { "url" : chrome.extension.getURL("blocked.html") + "?url=" + escape(tab_url) });
 }
 
-csapuntz.siteblock = (function () {
-   var path_white;
-   var path_black;
+chrome.tabs.onUpdated.addListener(
+        function(tabid, changeinfo, tab) {
+           sb.onTabUpdate(tabid, tab.url);
+           if (sb.isTabBlocked(tabid)) {
+             block(tabid, tab.url);
+           }
+        });
 
-   return {
-     updatePaths : function(paths) {
-        if (paths === undefined)
-	  return;
+function checkBlockedTabs() {
+  var a = sb.getBlockedTabs();
 
-	paths = paths.split("\n");
-	path_white = new Array();
-	path_black = new Array();
+  for (var i = 0; i < a.length; i++)
+    block(a[i].id, a[i].url);
+}
 
-	for (var i = 0 ; i < paths.length; ++i) {
-	    var p = paths[i];
-	    if (p.match(/^\s*$/)) {
-	    } else {
-	       var add = path_black;	    
-	       if (p[0] == '+') {
-		  p = p.substr(1);
-		  add = path_white;
-	       }
-	       p = p.replace('.', '\\.');
-	       p = p.replace('*', '.*');
-	       add.push(new RegExp(p, 'ig'));
-            }
-	}
-     },
 
-     isBlocked : function(url) {
-        var blocked = false;
+function onWindows(arrayWin) {
+  for (var i = 0; i < arrayWin.length; i++) {
+    var w = arrayWin[i];
+    for (var ti = 0; ti < w.tabs.length; ti++) {
+      sb.onTabUpdate(w.tabs[ti].id, w.tabs[ti].url);
+    }
+  }
 
-        if (url !== undefined && url.match(/https?:/)) {
-	   var p;
-	   for (p in path_black) {
-		 if (url.search(path_black[p]) != -1) {
-                     blocked = true;
-		     break;
-		 }
-	   }
-	   for (p in path_white) {
-		 if (url.search(path_white[p]) != -1) {
-                     blocked = false;
-		     break;
-		 }
-	   }
-	}
+  setInterval(checkBlockedTabs, 30000);
+  checkBlockedTabs();
+}
 
-        return blocked;
-     }, 
-   };
-})();
+function onOptionsChanged() {
+    sb.updatePaths(localStorage[csapuntz.siteblock.LIST]);
+    if(localStorage[csapuntz.siteblock.ALLOWED] !== undefined) {
+      sb.setAllowedUsage(Number(localStorage[csapuntz.siteblock.ALLOWED]),
+            Number(localStorage[csapuntz.siteblock.PERIOD]));
+    }
+}
+
+onOptionsChanged();
+
+chrome.windows.getAll( { populate: true }, onWindows );
 
