@@ -129,35 +129,32 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
         });
 
      // Visit google at 100 seconds
-     sb.onTabUpdate(1, "http://www.google.com");
-     Assert.areEqual(sb.isTabBlocked(1), false, "mon1");
+     Assert.areEqual(sb.blockThisTabChange(1, "http://www.google.com"), false, "mon1");
 
      time += 30;
 
-     sb.onTabUpdate(1, "http://www.apple.com");
-     Assert.areEqual(sb.isTabBlocked(1), false, "ok1");
+     Assert.areEqual(sb.blockThisTabChange(1, "http://www.apple.com"), false, "ok1");
 
      time += 120;
 
-     sb.onTabUpdate(1, "http://www.google.com");
-     Assert.areEqual(sb.isTabBlocked(1), false, "mon2");
+     Assert.areEqual(sb.blockThisTabChange(1, "http://www.google.com"), false, "mon2");
       
      time += 60;
-     Assert.areEqual(sb.isTabBlocked(1), true, "timeout");
-     assertArrayEqual(sb.getBlockedTabs(), [1], "getblockedtabs");
+     var bt = sb.getBlockedTabs();
 
-     sb.onTabUpdate(1, null);
+     Assert.areSame(bt.length, 1, "blocked tabs");
+     Assert.areSame(bt[0].url, "http://www.google.com", "google");
 
-     sb.onTabUpdate(2, "http://www.google.com");
-     Assert.areEqual(sb.isTabBlocked(2), true, "mon3");
-     sb.onTabUpdate(2, null);
+     
+     sb.blockThisTabChange(1, null);
 
-     sb.onTabUpdate(2, "http://www.apple.com");
-     Assert.areEqual(sb.isTabBlocked(2), false, "ok2");
+     Assert.areEqual(sb.blockThisTabChange(2, "http://www.google.com"), true, "mon3");
+     sb.blockThisTabChange(2, null);
+
+     Assert.areEqual(sb.blockThisTabChange(2, "http://www.apple.com"), false, "ok2");
 
      time += 600;
-     sb.onTabUpdate(2, "http://www.google.com");
-     Assert.areEqual(sb.isTabBlocked(2), false, "mon4");
+     Assert.areEqual(sb.blockThisTabChange(2, "http://www.google.com"), false, "mon4");
    },
 });
 

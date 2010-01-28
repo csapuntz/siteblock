@@ -1,17 +1,24 @@
 var sb = csapuntz.siteblock.newSiteBlock();
 
+if ("state" in localStorage) {
+    sb.setState(JSON.parse(localStorage['state']));
+}
+
 function block(id, tab_url)
 {
    chrome.tabs.update(id, 
            { "url" : chrome.extension.getURL("blocked.html") + "?url=" + escape(tab_url) });
 }
 
+function processTab(tab) 
+{
+   if(sb.blockThisTabChange(tab.id, tab.url))
+     block(tab.id, tab.url);
+}
+
 chrome.tabs.onUpdated.addListener(
         function(tabid, changeinfo, tab) {
-           sb.onTabUpdate(tabid, tab.url);
-           if (sb.isTabBlocked(tabid)) {
-             block(tabid, tab.url);
-           }
+           processTab(tab);
         });
 
 function checkBlockedTabs() {
@@ -19,6 +26,8 @@ function checkBlockedTabs() {
 
   for (var i = 0; i < a.length; i++)
     block(a[i].id, a[i].url);
+
+  localStorage['state'] = JSON.stringify(sb.getState());
 }
 
 
@@ -26,23 +35,19 @@ function onWindows(arrayWin) {
   for (var i = 0; i < arrayWin.length; i++) {
     var w = arrayWin[i];
     for (var ti = 0; ti < w.tabs.length; ti++) {
-      sb.onTabUpdate(w.tabs[ti].id, w.tabs[ti].url);
+      processTab(w.tabs[ti]);
     }
   }
 
   setInterval(checkBlockedTabs, 30000);
-  checkBlockedTabs();
 }
 
-function onOptionsChanged() {
-    sb.updatePaths(localStorage[csapuntz.siteblock.LIST]);
-    if(localStorage[csapuntz.siteblock.ALLOWED] !== undefined) {
-      sb.setAllowedUsage(Number(localStorage[csapuntz.siteblock.ALLOWED]),
-            Number(localStorage[csapuntz.siteblock.PERIOD]));
-    }
+function onOptionsChanged(opts) {
+    sb.updatePaths(opts.rules);
+    sb.setAllowedUsage(opts.allowed, opts.period);
 }
 
-onOptionsChanged();
+onOptionsChanged(csapuntz.siteblock.read_options());
 
 chrome.windows.getAll( { populate: true }, onWindows );
 

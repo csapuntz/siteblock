@@ -7,11 +7,15 @@
 
 
 function save_options() {
-  localStorage[csapuntz.siteblock.LIST] = document.getElementById('siteblock_list').value;
-  localStorage[csapuntz.siteblock.ALLOWED] = document.getElementById('allowed').value;
-  localStorage[csapuntz.siteblock.PERIOD] = document.getElementById('period').value; 
+  var opts = csapuntz.siteblock.read_options();
+    
+  opts.rules = document.getElementById('rules').value;
+  opts.allowed = Number(document.getElementById('allowed').value);
+  opts.period = Number(document.getElementById('period').value) * 60;
 
-  chrome.extension.getBackgroundPage().onOptionsChanged();
+  csapuntz.siteblock.write_options(opts);
+
+  chrome.extension.getBackgroundPage().onOptionsChanged(opts);
 
   // Update status to let user know options were saved.
   var status = document.getElementById("status");
@@ -23,22 +27,11 @@ function save_options() {
 }
 
 function restore_options() {
-  var list = localStorage[csapuntz.siteblock.LIST];
-  if (list !== undefined) {
-    document.getElementById("siteblock_list").value = list;
-  }
+  var opts = csapuntz.siteblock.read_options();
 
-  var allowed = localStorage[csapuntz.siteblock.ALLOWED];
-  if (allowed === undefined) 
-      allowed = "0";
-
-  document.getElementById("allowed").value = allowed;
-
-  var period = localStorage[csapuntz.siteblock.PERIOD];
-  if (period === undefined)
-      period = "1440";
-
-  document.getElementById("period").value = period;
+  document.getElementById("rules").value = opts.rules;
+  document.getElementById("allowed").value = opts.allowed;
+  document.getElementById("period").value = opts.period / 60;
 }
 
 // !-->
@@ -48,9 +41,9 @@ function restore_options() {
 	<div id="status"></div>
 	<form>
 	Sites to Block:<br />
-	<textarea spellcheck="false" id="siteblock_list" cols="60" rows="15"></textarea>
+	<textarea spellcheck="false" id="rules" cols="60" rows="15"></textarea>
         <br />
-        Unblock for <input type="text" id="allowed" cols="6" /> every <input type="text" id="period" cols="6" /> minutes.
+        Unblock for <input type="text" id="allowed" cols="6" /> minutes every <input type="text" id="period" cols="6" /> hours.
         <br />
 	<input type="button" onclick="save_options()" value="Save Options" />
         </form>

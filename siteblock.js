@@ -4,9 +4,42 @@ if (typeof csapuntz == "undefined") {
 
 csapuntz.siteblock = (function () {
   var sbself = {
-    LIST : 'siteblock_list',
-    ALLOWED : 'siteblock_allowed',
-    PERIOD : 'siteblock_period', 
+    read_options : function(stg) {
+       var opts = {};
+
+       if (stg === undefined) {
+         stg = localStorage;
+       }
+
+       if ("settings" in stg) {
+         opts = JSON.parse(stg['settings']);
+       }
+
+       if ("siteblock_list" in stg) {
+         opts['rules'] = stg['siteblock_list'];
+       }
+
+       if (! ("rules" in opts)) 
+          opts.rules = "";
+
+       if (! ("allowed" in opts))
+          opts.allowed = 0;
+
+       if (! ("period" in opts))
+          opts.period = 1440;
+
+       return opts;
+    },
+
+    write_options : function(opts, stg) {
+       if (stg === undefined) {
+          stg = localStorage;
+       } 
+
+       stg['settings'] = JSON.stringify(opts);
+       if ("siteblock_list" in stg)
+           delete stg["siteblock_list"];
+    },
 
     newUsageTracker : function() {
        var time_cb = function () {
@@ -67,6 +100,19 @@ csapuntz.siteblock = (function () {
           setTimeCallback : function(new_cb) {
             time_cb = new_cb;
           },
+
+          getState : function() {
+            return {
+              "time_used" : time_used,
+              "save_time" : time_cb()
+            };
+          },
+
+          setState : function(st) {
+             time_used = st.time_used;
+             last_start = -1;
+             last_end = st.save_time;
+          },
        };
     },
 
@@ -78,7 +124,7 @@ csapuntz.siteblock = (function () {
       var ref = 0;
 
       var ut = sbself.newUsageTracker();
-      var endfunc;
+      var endfunc = function() {};
       
       var get_tracked_tabs = function() {
          var t = [];
@@ -156,13 +202,26 @@ csapuntz.siteblock = (function () {
 
          setTimeCallback : ut.setTimeCallback,
 
-         onTabUpdate : function(tabid, url) {
+         getState : function() {
+            return {
+                "ut" : ut.getState()
+            };
+         },
+
+         setState : function(st) {
+            if ("ut" in st) {
+                ut.setState(st.ut);
+            }
+         },
+
+         blockThisTabChange : function(tabid, url) {
             var ti = get_tab_info(tabid);
             var blocked = (url !== null) ? self.isBlocked(url) : false;
+            var allowed = ut.allowed();
 
             if (!ti.blocked && blocked) {
                ref = ref + 1;
-               if (ref === 1) {
+               if (ref === 1 && allowed) {
                   // Start the clock running
                   endfunc = ut.start();
                } 
@@ -170,6 +229,7 @@ csapuntz.siteblock = (function () {
                ref = ref - 1;
                if (ref === 0) {
                   endfunc();
+                  endfunc = function() {};
                }
             }
 
@@ -179,12 +239,8 @@ csapuntz.siteblock = (function () {
                 ti['url'] = url;
                 ti['blocked'] = blocked;
             }
-         },
 
-         isTabBlocked : function(tabid, url) {  
-            var ti = get_tab_info(tabid);
-
-            return ti.blocked && !ut.allowed();
+            return blocked && !allowed;
          },
 
          getBlockedTabs : function() {
