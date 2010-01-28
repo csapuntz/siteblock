@@ -63,7 +63,20 @@ csapuntz.siteblock = (function () {
            }
        }
 
-       return {
+       var get_time_used = function() {
+             var time = time_cb();
+
+             check_reset(time);
+
+             // If we're in an existing interval, count it
+             var time_adj = 0;
+             if (last_start != -1)
+                time_adj = (time - last_start);
+
+             return (time_used + time_adj);
+       };
+
+       self = {
           start: function() {
              last_start = time_cb();
              check_reset(last_start);
@@ -78,18 +91,9 @@ csapuntz.siteblock = (function () {
              };
           },
 
-          
+         
           allowed: function() {
-             var time = time_cb();
-
-             check_reset(time);
-
-             // If we're in an existing interval, count it
-             var time_adj = 0;
-             if (last_start != -1)
-                time_adj = (time - last_start);
-
-             return ((time_used + time_adj) < time_allowed);
+             return get_time_used() < time_allowed; 
           },
 
           setInterval : function(allowed, period) {
@@ -103,17 +107,19 @@ csapuntz.siteblock = (function () {
 
           getState : function() {
             return {
-              "time_used" : time_used,
-              "save_time" : time_cb()
+              "time_used" : get_time_used(),
+              "last_end" : ((last_start != -1) ? time_cb() : last_end),
             };
           },
 
           setState : function(st) {
              time_used = st.time_used;
              last_start = -1;
-             last_end = st.save_time;
+             last_end = st.last_end;
           },
        };
+
+       return self;
     },
 
     newSiteBlock : function() {
