@@ -1,6 +1,6 @@
 {
    "name": "SiteBlock",
-   "version": "0.2",
+   "version": "0.2.1",
    "description": "Block sites to discourage procrastination",
    "options_page": "options.html",
    "background_page": "background.html",

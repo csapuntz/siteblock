@@ -21,6 +21,11 @@ chrome.tabs.onUpdated.addListener(
            processTab(tab);
         });
 
+chrome.tabs.onRemoved.addListener(
+        function(tabid) {
+           sb.blockThisTabChange(tabid, null);
+        });
+
 function checkBlockedTabs() {
   var a = sb.getBlockedTabs();
 

@@ -76,7 +76,7 @@ csapuntz.siteblock = (function () {
              return (time_used + time_adj);
        };
 
-       self = {
+       var self = {
           start: function() {
              last_start = time_cb();
              check_reset(last_start);
