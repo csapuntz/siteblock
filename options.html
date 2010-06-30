@@ -1,7 +1,7 @@
 <html>
-    <head><title>SiteBlock Extension Options</title></head>
+    <head><title>SiteBlock Extension Options</title>
 
-<script type="text/javascript" src="siteblock.js" />
+<script type="text/javascript" src="siteblock.js"></script>
 <script type="text/javascript">
 // <!-- 
 
@@ -36,7 +36,9 @@ function restore_options() {
 
 // !-->
 </script>
- 
+
+</head>
+
 <body onload="restore_options()">
 	<div id="status"></div>
 	<form>
@@ -50,22 +52,20 @@ function restore_options() {
 
 <h2>Help</h2>
 
-<p>List the websites you want to block, one per line. For example:
+<p>List the websites you want to block, one per line. For example:</p>
 <pre>
 cnn.com
 nytimes.com
 google.com/news
 </pre>
-</p>
 
 <p>If you would like to block all sites except for a select few, enter a '*'
-on the first line and the websites you wish to allow with a '+' before each line. For example:
+on the first line and the websites you wish to allow with a '+' before each line. For example:</p>
 <pre>
 *
 +stackoverflow.com
 +msdn.microsoft.com
 </pre>
-</p>
 
 <p>If you found this software useful, consider <a href="http://sites.google.com/site/siteblockchrome/donate">making a donation</a>.</p>
 
