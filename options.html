@@ -1,45 +1,13 @@
 <html>
-    <head><title>SiteBlock Extension Options</title>
+    <head>
+        <title>SiteBlock Extension Options</title>
 
-<script type="text/javascript" src="siteblock.js"></script>
-<script type="text/javascript">
-// <!-- 
+        <script type="text/javascript" src="siteblock.js"></script>
+        <script type="text/javascript" src="options.js"></script>
 
+    </head>
 
-function save_options() {
-  var opts = csapuntz.siteblock.read_options();
-    
-  opts.rules = document.getElementById('rules').value;
-  opts.allowed = Number(document.getElementById('allowed').value);
-  opts.period = Number(document.getElementById('period').value) * 60;
-
-  csapuntz.siteblock.write_options(opts);
-
-  chrome.extension.getBackgroundPage().onOptionsChanged(opts);
-
-  // Update status to let user know options were saved.
-  var status = document.getElementById("status");
-  status.innerHTML = "Options Saved.";
-  setTimeout(function() {
-    status.innerHTML = "";
-  }, 750);
-
-}
-
-function restore_options() {
-  var opts = csapuntz.siteblock.read_options();
-
-  document.getElementById("rules").value = opts.rules;
-  document.getElementById("allowed").value = opts.allowed;
-  document.getElementById("period").value = opts.period / 60;
-}
-
-// !-->
-</script>
-
-</head>
-
-<body onload="restore_options()">
+    <body>
 	<div id="status"></div>
 	<form>
 	Sites to Block:<br />
@@ -47,7 +15,7 @@ function restore_options() {
         <br />
         Unblock for <input type="text" id="allowed" cols="6" /> minutes every <input type="text" id="period" cols="6" /> hours.
         <br />
-	<input type="button" onclick="save_options()" value="Save Options" />
+	<input id="submit" type="button" value="Save Options" />
         </form>
 
 <h2>Help</h2>

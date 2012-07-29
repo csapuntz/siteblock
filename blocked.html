@@ -1,32 +1,9 @@
 <html>
     <head>
-    <script type="text/javascript">
-        // <!--
-function onload() {
-    var ws = window.location.search;
-
-  if (ws !== undefined) {
-      var kvs = ws.substring(1).split('&');
-      for (var i = 0; i < kvs.length; i++) {
-         var kv = kvs[i].split('=');
-         if (kv[0] == 'url') {
-            
-            var u = document.getElementById("url");
-                       
-            var url = decodeURIComponent(kv[1]);
-            u.href = url;
-            u.appendChild(document.createTextNode(url));
-         }
-      }
-  }
-}
-
-
-// -->
-    </script>
+        <script src="blocked.js" type="text/javascript"></script>
     </head>
-	<body onload="onload()">
-            <h1>Blocked by SiteBlock extension</h1>
-            Url: <a id="url"></a>
-	</body>
+    <body>
+        <h1>Blocked by SiteBlock extension</h1>
+        Url: <a id="url"></a>
+    </body>
 </html>
