@@ -1,3 +1,6 @@
+// Copyright 2012 Constantine Sapuntzakis
+//
+
 if (typeof csapuntz == "undefined") {
     var csapuntz = {};
 }

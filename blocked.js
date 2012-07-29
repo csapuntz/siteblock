@@ -1,3 +1,6 @@
+// Copyright 2012 Constantine Sapuntzakis
+//
+
 function onload() {
     var ws = window.location.search;
 

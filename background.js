@@ -1,3 +1,5 @@
+// Copyright 2010-2012 Constantine Sapuntzakis
+
 var sb = csapuntz.siteblock.newSiteBlock();
 
 if ("state" in localStorage) {
@@ -24,6 +26,11 @@ chrome.tabs.onUpdated.addListener(
 chrome.tabs.onRemoved.addListener(
         function(tabid) {
            sb.blockThisTabChange(tabid, null);
+        });
+
+chrome.tabs.onActivated.addListener(
+        function(activeInfo) {
+            chrome.tabs.get(activeInfo.tabId, processTab);
         });
 
 function checkBlockedTabs() {
