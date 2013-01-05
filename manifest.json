@@ -3,11 +3,18 @@
    "name": "SiteBlock",
    "version": "0.2.4",
    "description": "Block sites to discourage procrastination",
-   "options_page": "options.html",
+   "options_page": "html/options.html",
    "background" : {
-       "page": "background.html" 
+       "page": "html/background.html" 
    }, 
    "permissions": [ 
       "tabs"
-   ]
+   ],
+   "icons":{
+    "48":"images/bigicon.png"
+   },
+   "browser_action": {
+    "default_title": "SiteBlock",
+    "default_icon": "images/icon.png"
+   }
 }
