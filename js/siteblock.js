@@ -127,7 +127,7 @@ csapuntz.siteblock = (function () {
 
     newSiteBlock : function() {
       var path_white;
-      var path_black;
+      var path_black_redirect;
 
       var tabState = {};
       var ref = 0;
@@ -154,7 +154,7 @@ csapuntz.siteblock = (function () {
       var get_tab_info = function(tabid) {
          var tabstr = "Tab" + tabid;
          if (tabState[tabstr] === undefined) {
-            tabState[tabstr] = { blocked: false };
+            tabState[tabstr] = { blocked: false};
          } 
 
          return tabState[tabstr];
@@ -167,45 +167,53 @@ csapuntz.siteblock = (function () {
 
             paths = paths.split("\n");
             path_white = new Array();
-            path_black = new Array();
+            path_black_redirect = new Array();
 
             for (var i = 0 ; i < paths.length; ++i) {
                 var p = paths[i];
+                var redirect_keyword = ' > ';
                 if (p.match(/^\s*$/)) {
                 } else {
-                   var add = path_black;	    
-                   if (p[0] == '+') {
-                      p = p.substr(1);
-                      add = path_white;
-                   }
                    p = p.replace('.', '\\.');
                    p = p.replace('*', '.*');
-                   add.push(new RegExp(p, 'ig'));
+                   if (p[0] == '+') {
+                      p = p.substr(1);
+                      path_white.push(new RegExp(p, 'ig'));
+                   } else {
+                    var redirect = '';
+                    var block = p;
+                    if (p.indexOf(redirect_keyword) > -1) {
+                       var block = p.substr(0, p.indexOf(redirect_keyword));
+                       var redirect = p.substr(p.indexOf(redirect_keyword) + redirect_keyword.length);
+                       if (redirect.indexOf('https://') == -1 && redirect.indexOf('http://') == -1) {
+                          redirect = 'http://' + redirect;
+                       }                   
+                    }
+                    path_black_redirect.push({'regex': new RegExp(block, 'ig'), 'redirect': redirect});
+                   }
                 }
             }
          },
-
-         isBlocked : function(url) {
-            var blocked = false;
-
+         getBlockedState : function(url) {
+            var blocked = {'blocked': false, 'redirect': ''};
             if (url !== undefined && url.match(/https?:/)) {
                var p;
-               for (p in path_black) {
-                     if (url.search(path_black[p]) != -1) {
-                         blocked = true;
+               for (p in path_black_redirect) {
+                     if (url.search(path_black_redirect[p]['regex']) != -1) {
+                         blocked['blocked'] = true;
+                         blocked['redirect'] = path_black_redirect[p]['redirect'];
                          break;
                      }
                }
                for (p in path_white) {
                      if (url.search(path_white[p]) != -1) {
-                         blocked = false;
+                         blocked['blocked'] = false;
                          break;
                      }
                }
             }
-
             return blocked;
-         },  // isBlocked
+         },  // getBlockedState
         
          setAllowedUsage : ut.setInterval,
 
@@ -225,16 +233,16 @@ csapuntz.siteblock = (function () {
 
          blockThisTabChange : function(tabid, url) {
             var ti = get_tab_info(tabid);
-            var blocked = (url !== null) ? self.isBlocked(url) : false;
+            var block_state = (url !== null) ? self.getBlockedState(url) : {'blocked': false, 'redirect': ''};
             var allowed = ut.allowed();
 
-            if (!ti.blocked && blocked) {
+            if (!ti.blocked && block_state['blocked']) {
                ref = ref + 1;
                if (ref === 1 && allowed) {
                   // Start the clock running
                   endfunc = ut.start();
                } 
-            } else if (ti.blocked && !blocked) {
+            } else if (ti.blocked && !block_state['blocked']) {
                ref = ref - 1;
                if (ref === 0) {
                   endfunc();
@@ -246,10 +254,10 @@ csapuntz.siteblock = (function () {
                 delete_tab_info(tabid);
             } else {
                 ti['url'] = url;
-                ti['blocked'] = blocked;
+                ti['blocked'] = block_state['blocked'];
             }
-
-            return blocked && !allowed;
+            block_state['blocked'] = block_state['blocked'] && !allowed;
+            return block_state;
          },
 
          getBlockedTabs : function() {

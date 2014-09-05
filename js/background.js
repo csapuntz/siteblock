@@ -8,14 +8,22 @@ if ("state" in localStorage) {
 
 function block(id, tab_url)
 {
-   chrome.tabs.update(id, 
-           { "url" : chrome.extension.getURL("../html/blocked.html") + "?url=" + escape(tab_url) });
+   redirect(id, chrome.extension.getURL("../html/blocked.html") + "?url=" + escape(tab_url));
+}
+
+function redirect(id, url)
+{
+  chrome.tabs.update(id, {"url": url});
 }
 
 function processTab(tab) 
 {
-   if(sb.blockThisTabChange(tab.id, tab.url))
+   var block_state = sb.blockThisTabChange(tab.id, tab.url);
+   if (block_state['blocked'] && !block_state['redirect']) {
      block(tab.id, tab.url);
+   } else if (block_state['blocked'] && block_state['redirect']) {
+     redirect(tab.id, block_state['redirect']);
+   }
 }
 
 chrome.tabs.onUpdated.addListener(
