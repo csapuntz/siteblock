@@ -48,19 +48,19 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
    testBlack : function () {
      var sb = csapuntz.siteblock.newSiteBlock();
      sb.updatePaths("google.com\ncnn");
-     Assert.areEqual(sb.isBlocked("http://google.com"), true, "http://google.com");
-     Assert.areEqual(sb.isBlocked("https://cnn.com"), true, "https://cnn.com");
-     Assert.areEqual(sb.isBlocked("http://www.apple.com"), false, "http://www.apple.com");
-     Assert.areEqual(sb.isBlocked("file://c:/Windows/system32"), false, "file://c:/...");
+     Assert.areEqual(sb.getBlockedState("http://google.com")['blocked'], true, "http://google.com");
+     Assert.areEqual(sb.getBlockedState("https://cnn.com")['blocked'], true, "https://cnn.com");
+     Assert.areEqual(sb.getBlockedState("http://www.apple.com")['blocked'], false, "http://www.apple.com");
+     Assert.areEqual(sb.getBlockedState("file://c:/Windows/system32")['blocked'], false, "file://c:/...");
    },
 
    testWhite: function() {
      var sb = csapuntz.siteblock.newSiteBlock();
      sb.updatePaths("*\n+google.com");
-     Assert.areEqual(sb.isBlocked("http://google.com"), false, "http://google.com");
-     Assert.areEqual(sb.isBlocked("https://cnn.com"), true, "https://cnn.com");
-     Assert.areEqual(sb.isBlocked("http://www.apple.com"), true, "http://www.apple.com");
-     Assert.areEqual(sb.isBlocked("file://c:/Windows/system32"), false, "file://");
+     Assert.areEqual(sb.getBlockedState("http://google.com")['blocked'], false, "http://google.com");
+     Assert.areEqual(sb.getBlockedState("https://cnn.com")['blocked'], true, "https://cnn.com");
+     Assert.areEqual(sb.getBlockedState("http://www.apple.com")['blocked'], true, "http://www.apple.com");
+     Assert.areEqual(sb.getBlockedState("file://c:/Windows/system32")['blocked'], false, "file://");
    },
 
    testUsageTracker : function() {
@@ -129,15 +129,15 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
         });
 
      // Visit google at 100 seconds
-     Assert.areEqual(sb.blockThisTabChange(1, "http://www.google.com"), false, "mon1");
+     Assert.areEqual(sb.blockThisTabChange(1, "http://www.google.com")['blocked'], false, "mon1");
 
      time += 30;
 
-     Assert.areEqual(sb.blockThisTabChange(1, "http://www.apple.com"), false, "ok1");
+     Assert.areEqual(sb.blockThisTabChange(1, "http://www.apple.com")['blocked'], false, "ok1");
 
      time += 120;
 
-     Assert.areEqual(sb.blockThisTabChange(1, "http://www.google.com"), false, "mon2");
+     Assert.areEqual(sb.blockThisTabChange(1, "http://www.google.com")['blocked'], false, "mon2");
       
      time += 60;
      var bt = sb.getBlockedTabs();
@@ -148,13 +148,13 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
      
      sb.blockThisTabChange(1, null);
 
-     Assert.areEqual(sb.blockThisTabChange(2, "http://www.google.com"), true, "mon3");
+     Assert.areEqual(sb.blockThisTabChange(2, "http://www.google.com")['blocked'], true, "mon3");
      sb.blockThisTabChange(2, null);
 
-     Assert.areEqual(sb.blockThisTabChange(2, "http://www.apple.com"), false, "ok2");
+     Assert.areEqual(sb.blockThisTabChange(2, "http://www.apple.com")['blocked'], false, "ok2");
 
      time += 600;
-     Assert.areEqual(sb.blockThisTabChange(2, "http://www.google.com"), false, "mon4");
+     Assert.areEqual(sb.blockThisTabChange(2, "http://www.google.com")['blocked'], false, "mon4");
    },
 });
 
