@@ -13,16 +13,11 @@ function block(id, tab_url)
 
 function redirect(id, url)
 {
-  chrome.tabs.get(id, function(tab) {tab.url = url;});
-  chrome.tabs.update(id, {"url": url},
-    function (tab) {
-      console.log("new tab: " + JSON.stringify(tab));
-    });
+  chrome.tabs.update(id, {"url": url});
 }
 
 function processTab(tab) 
 {
-  console.log('process ' + tab.url);
    var block_state = sb.blockThisTabChange(tab.id, tab.url);
    if (block_state['blocked'] && !block_state['redirect']) {
      block(tab.id, tab.url);
