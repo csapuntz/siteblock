@@ -1,13 +1,17 @@
 {
-   "manifest_version": 2,
+   "manifest_version": 3,
    "name": "SiteBlock",
-   "version": "0.2.4",
+   "version": "0.2.5",
    "description": "Block sites to discourage procrastination",
    "options_page": "html/options.html",
-   "background" : {
-       "page": "html/background.html"
+   "background": {
+      "service_worker": "js/background.js",
+      "type": "module"
    },
    "permissions": [
+      "alarms",
+      "offscreen",
+      "storage",
       "tabs"
    ]
 }

@@ -1,3 +1,5 @@
+import csapuntz from "./siteblock.js";
+
 YAHOO.namespace("csapuntz");
 
 var Assert = YAHOO.util.Assert;
@@ -5,7 +7,7 @@ var Assert = YAHOO.util.Assert;
 function newTracker() {
    var ut = csapuntz.siteblock.newUsageTracker();
    ut.test_time = 0;
-   
+
    ut.setTimeCallback(function() {
       return ut.test_time;
       });
