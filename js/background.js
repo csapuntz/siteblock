@@ -126,7 +126,7 @@ async function init() {
 
   chrome.windows.getAll( { populate: true }, onWindows );
 
-  const alarm = chrome.alarms.get("checkBlockedTabs");
+  const alarm = await chrome.alarms.get("checkBlockedTabs");
   if (!alarm) {
     chrome.alarms.create("checkBlockedTabs", {
       periodInMinutes: 1
