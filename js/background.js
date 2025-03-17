@@ -134,9 +134,9 @@ async function init() {
   }
 }
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name == "checkBlockedTabs") {
-    checkBlockedTabs();
+    await checkBlockedTabs();
   }
 });
 
