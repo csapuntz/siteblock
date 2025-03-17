@@ -34,21 +34,21 @@ async function setupOffscreenDocument(path) {
 
 
 
-function block(id, tab_url)
+async function block(id, tab_url)
 {
-   chrome.tabs.update(id,
+   await chrome.tabs.update(id,
            { "url" : chrome.runtime.getURL("../html/blocked.html") + "?url=" + escape(tab_url) });
 }
 
-function processTab(tab)
+async function processTab(tab)
 {
    if(sb.blockThisTabChange(tab.id, tab.url))
-     block(tab.id, tab.url);
+     await block(tab.id, tab.url);
 }
 
 chrome.tabs.onUpdated.addListener(
-        function(tabid, changeinfo, tab) {
-           processTab(tab);
+        async function(tabid, changeinfo, tab) {
+           await processTab(tab);
         });
 
 chrome.tabs.onRemoved.addListener(
@@ -57,27 +57,29 @@ chrome.tabs.onRemoved.addListener(
         });
 
 chrome.tabs.onActivated.addListener(
-        function(activeInfo) {
-            chrome.tabs.get(activeInfo.tabId, processTab);
+        async function(activeInfo) {
+            const tab = await chrome.tabs.get(activeInfo.tabId);
+            await processTab(tab);
         });
 
 async function checkBlockedTabs() {
   var a = sb.getBlockedTabs();
 
   for (var i = 0; i < a.length; i++)
-    block(a[i].id, a[i].url);
+    await block(a[i].id, a[i].url);
 
+  console.log("Saving state");
+  console.log(sb.getState());
   await chrome.storage.local.set({
     "state": JSON.stringify(sb.getState())
   });
 }
 
-
-function onWindows(arrayWin) {
+async function processWindows(arrayWin) {
   for (var i = 0; i < arrayWin.length; i++) {
     var w = arrayWin[i];
     for (var ti = 0; ti < w.tabs.length; ti++) {
-      processTab(w.tabs[ti]);
+      await processTab(w.tabs[ti]);
     }
   }
 }
@@ -88,7 +90,8 @@ chrome.storage.onChanged.addListener(async function(changes, namespace) {
     var opts = csapuntz.siteblock.read_options(items);
     sb.updatePaths(opts.rules);
     sb.setAllowedUsage(opts.allowed, opts.period);
-    chrome.windows.getAll( { populate: true }, onWindows );
+    const arrayWin = await chrome.windows.getAll( { populate: true });
+    await processWindows(arrayWin);
   }
 });
 
@@ -119,12 +122,15 @@ async function init() {
 
   if ("state" in items) {
     sb.setState(JSON.parse(items['state']));
+    console.log("Restored state");
+    console.log(sb.getState());
   }
   const opts = csapuntz.siteblock.read_options(items);
   sb.updatePaths(opts.rules);
   sb.setAllowedUsage(opts.allowed, opts.period);
 
-  chrome.windows.getAll( { populate: true }, onWindows );
+  const arrayWin = await chrome.windows.getAll( { populate: true });
+  await processWindows(arrayWin);
 
   const alarm = await chrome.alarms.get("checkBlockedTabs");
   if (!alarm) {
