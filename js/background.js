@@ -134,7 +134,7 @@ async function init() {
 
   const alarm = await chrome.alarms.get("checkBlockedTabs");
   if (!alarm) {
-    chrome.alarms.create("checkBlockedTabs", {
+    await chrome.alarms.create("checkBlockedTabs", {
       periodInMinutes: 1
     });
   }
