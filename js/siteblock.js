@@ -62,18 +62,21 @@ csapuntz.siteblock = (function () {
          };
 
          var self = {
-            start: function () {
-               last_start = time_cb();
-               check_reset(last_start);
+            on_blocked_site_allowed: function () {
+               if (last_start == -1) {
+                  last_start = time_cb();
+               }
+            },
 
-               return function () {
+            on_last_blocked_done: function () {
+               if (last_start != -1) {
                   var end = time_cb();
                   if (end > last_start)
                      time_used += (end - last_start);
 
                   last_start = -1;
                   last_end = end;
-               };
+               }
             },
 
             allowed: function () {
@@ -91,14 +94,15 @@ csapuntz.siteblock = (function () {
 
             getState: function () {
                return {
-                  "time_used": get_time_used(),
-                  "last_end": ((last_start != -1) ? time_cb() : last_end),
+                  "time_used": time_used,
+                  "last_start": last_start,
+                  "last_end": last_end,
                };
             },
 
             setState: function (st) {
                time_used = st.time_used;
-               last_start = -1;
+               last_start = ("last_start" in st) ? st.last_start : -1;
                last_end = st.last_end;
             },
          };
@@ -110,36 +114,9 @@ csapuntz.siteblock = (function () {
          var path_white;
          var path_black;
 
-         var tabState = {};
-         var ref = 0;
+         var tracked_tabs = [];
 
          var ut = sbself.newUsageTracker();
-         var endfunc = function () { };
-
-         var get_tracked_tabs = function () {
-            var t = [];
-
-            for (var v in tabState) {
-               if (v.substring(0, 3) == "Tab")
-                  t.push(Number(v.substring(3)));
-            }
-
-            return t;
-         };
-
-         var delete_tab_info = function (tabid) {
-            var tabstr = "Tab" + tabid;
-            delete tabState[tabstr];
-         };
-
-         var get_tab_info = function (tabid) {
-            var tabstr = "Tab" + tabid;
-            if (tabState[tabstr] === undefined) {
-               tabState[tabstr] = { blocked: false };
-            }
-
-            return tabState[tabstr];
-         };
 
          var self = {
             updatePaths: function (paths) {
@@ -194,7 +171,8 @@ csapuntz.siteblock = (function () {
 
             getState: function () {
                return {
-                  "ut": ut.getState()
+                  "ut": ut.getState(),
+                  "tabs": tracked_tabs.slice(),
                };
             },
 
@@ -202,32 +180,42 @@ csapuntz.siteblock = (function () {
                if ("ut" in st) {
                   ut.setState(st.ut);
                }
+               if ("tabs" in st) {
+                  tracked_tabs = st.tabs.slice();
+               }
+            },
+
+            startTracking: function (tabid) {
+               if (!tracked_tabs.includes(tabid)) {
+                  tracked_tabs.push(tabid);
+               }
+            },
+
+            stopTracking: function (tabid) {
+               var idx = tracked_tabs.indexOf(tabid);
+               if (idx != -1) {
+                  tracked_tabs.splice(idx, 1);
+                  return true;
+               }
+               return false;
+            },
+
+            emptyTracking: function () {
+               return tracked_tabs.length == 0;
             },
 
             blockThisTabChange: function (tabid, url) {
-               var ti = get_tab_info(tabid);
                var blocked = (url !== null) ? self.isBlocked(url) : false;
                var allowed = ut.allowed();
 
-               if (!ti.blocked && blocked) {
-                  ref = ref + 1;
-                  if (ref === 1 && allowed) {
-                     // Start the clock running
-                     endfunc = ut.start();
-                  }
-               } else if (ti.blocked && !blocked) {
-                  ref = ref - 1;
-                  if (ref === 0) {
-                     endfunc();
-                     endfunc = function () { };
-                  }
-               }
+               if (blocked) {
+                  self.startTracking(tabid);
 
-               if (url === null) {
-                  delete_tab_info(tabid);
-               } else {
-                  ti['url'] = url;
-                  ti['blocked'] = blocked;
+                  if (allowed) {
+                     ut.on_blocked_site_allowed();
+                  }
+               } else if (self.stopTracking(tabid) && self.emptyTracking()) {
+                  ut.on_last_blocked_done();
                }
 
                return blocked && !allowed;
@@ -238,16 +226,7 @@ csapuntz.siteblock = (function () {
                   return [];
                }
 
-               var tabs = get_tracked_tabs();
-               var ret = [];
-               var i;
-               for (i = 0; i < tabs.length; ++i) {
-                  var ti = get_tab_info(tabs[i]);
-
-                  if (ti.blocked)
-                     ret.push({ id: tabs[i], url: ti.url });
-               }
-               return ret;
+               return tracked_tabs.slice();
             }
          }; // self =
 

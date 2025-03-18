@@ -60,37 +60,36 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
 
       ut.test_time += 20;
       
-      var e = ut.start();
+      ut.on_blocked_site_allowed();
 
       Assert.areEqual(ut.allowed(), true, "started");
 
       ut.test_time += 40;
 
-      e();
+      ut.on_last_blocked_done();
 
       Assert.areEqual(ut.allowed(), true, "ended");
       ut.test_time += 40;
 
-      e = ut.start();
+      ut.on_blocked_site_allowed();
       Assert.areEqual(ut.allowed(), true, "started2");
 
       ut.test_time += 40;
       Assert.areEqual(ut.allowed(), false, "pre-ended2");
 
-      e();
-
+      ut.on_last_blocked_done();
       Assert.areEqual(ut.allowed(), false, "ended2");
 
       ut.test_time += 540;
       Assert.areEqual(ut.allowed(), true, "afterwait");
 
-      e = ut.start();
+      ut.on_blocked_site_allowed();
       Assert.areEqual(ut.allowed(), true, "started3");
 
       ut.test_time += 20;
-      e();
+      ut.on_last_blocked_done();
       ut.test_time += 20;
-      e = ut.start();
+      ut.on_blocked_site_allowed();
       ut.test_time += 41;
       Assert.areEqual(ut.allowed(), false, "expired-again");
    },
@@ -98,11 +97,11 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
    testLongInterval : function() {
       var ut = newTracker();
 
-      var e = ut.start();
+      ut.on_blocked_site_allowed();
       ut.test_time += 1000;
       Assert.areEqual(ut.allowed(), false, "testLongInterval1");
  
-      e();
+      ut.on_last_blocked_done();
       Assert.areEqual(ut.allowed(), false, "testLongInterval2");
    },
 
@@ -133,7 +132,7 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
      var bt = sb.getBlockedTabs();
 
      Assert.areSame(bt.length, 1, "blocked tabs");
-     Assert.areSame(bt[0].url, "http://www.google.com", "google");
+     Assert.areSame(bt[0], 1, "google");
 
      
      sb.blockThisTabChange(1, null);

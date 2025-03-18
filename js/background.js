@@ -46,33 +46,46 @@ async function processTab(tab)
      await block(tab.id, tab.url);
 }
 
+async function maybePersistState(details)
+{
+  const newState = JSON.stringify(sb.getState());
+  const oldState = await chrome.storage.local.get("state");
+  if (!("state" in oldState) || oldState.state != newState) {
+    console.log("Due to " + details + " saving state new state: " + newState);
+    await chrome.storage.local.set({
+      "state": newState,
+    })
+  }
+}
+
 chrome.tabs.onUpdated.addListener(
         async function(tabid, changeinfo, tab) {
            await processTab(tab);
+           maybePersistState("onUpdated");
         });
 
 chrome.tabs.onRemoved.addListener(
-        function(tabid) {
+        async function(tabid) {
            sb.blockThisTabChange(tabid, null);
+           maybePersistState("onRemoved");
         });
 
 chrome.tabs.onActivated.addListener(
         async function(activeInfo) {
             const tab = await chrome.tabs.get(activeInfo.tabId);
             await processTab(tab);
+            maybePersistState("onActivated");
         });
 
 async function checkBlockedTabs() {
   var a = sb.getBlockedTabs();
 
-  for (var i = 0; i < a.length; i++)
-    await block(a[i].id, a[i].url);
+  for (var i = 0; i < a.length; i++) {
+    const tab = await chrome.tabs.get(a[i]);
+    await block(a[i].id, tab.url);
+  }
 
-  console.log("Saving state");
-  console.log(sb.getState());
-  await chrome.storage.local.set({
-    "state": JSON.stringify(sb.getState())
-  });
+  maybePersistState("checkBlockedTabs");
 }
 
 async function processWindows(arrayWin) {
@@ -82,6 +95,7 @@ async function processWindows(arrayWin) {
       await processTab(w.tabs[ti]);
     }
   }
+  maybePersistState("processWindows");
 }
 
 chrome.storage.onChanged.addListener(async function(changes, namespace) {
