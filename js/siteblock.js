@@ -55,26 +55,34 @@ csapuntz.siteblock = (function () {
 
             // If we're in an existing interval, count it
             var time_adj = 0;
-            if (last_start != -1)
+            if (last_start != -1 && time > last_start && time < last_start + 120)
                time_adj = (time - last_start);
 
             return (time_used + time_adj);
          };
 
          var self = {
-            on_blocked_site_allowed: function () {
+            onBlockedSiteAllowed: function () {
                if (last_start == -1) {
                   last_start = time_cb();
                }
             },
 
-            on_last_blocked_done: function () {
+            onLastBlockedDone: function () {
+               self.updateTimeUsed();
+               last_start = -1;
+            },
+
+            updateTimeUsed: function () {
                if (last_start != -1) {
                   var end = time_cb();
-                  if (end > last_start)
+                  if (end > last_start + 120) {
+                     // Don't count the time
+                  } else if (end > last_start) {
                      time_used += (end - last_start);
+                  }
 
-                  last_start = -1;
+                  last_start = end;
                   last_end = end;
                }
             },
@@ -212,10 +220,10 @@ csapuntz.siteblock = (function () {
                   self.startTracking(tabid);
 
                   if (allowed) {
-                     ut.on_blocked_site_allowed();
+                     ut.onBlockedSiteAllowed();
                   }
                } else if (self.stopTracking(tabid) && self.emptyTracking()) {
-                  ut.on_last_blocked_done();
+                  ut.onLastBlockedDone();
                }
 
                return blocked && !allowed;
@@ -227,7 +235,11 @@ csapuntz.siteblock = (function () {
                }
 
                return tracked_tabs.slice();
-            }
+            },
+
+            updateTimeUsed: function () {
+               ut.updateTimeUsed();
+            },
          }; // self =
 
          return self;

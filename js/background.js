@@ -32,8 +32,6 @@ async function setupOffscreenDocument(path) {
   }
 }
 
-
-
 async function block(id, tab_url)
 {
    await chrome.tabs.update(id,
@@ -85,16 +83,29 @@ async function checkBlockedTabs() {
     await block(a[i].id, tab.url);
   }
 
+  sb.updateTimeUsed();
+
   maybePersistState("checkBlockedTabs");
 }
 
 async function processWindows(arrayWin) {
+  var tabsSeen = {};
+
   for (var i = 0; i < arrayWin.length; i++) {
     var w = arrayWin[i];
     for (var ti = 0; ti < w.tabs.length; ti++) {
       await processTab(w.tabs[ti]);
+      tabsSeen[w.tabs[ti].id] = true;
     }
   }
+
+  var blockedTabs = sb.getBlockedTabs();
+  for (var i = 0; i < blockedTabs.length; i++) {
+    if (!(blockedTabs[i] in tabsSeen)) {
+      sb.blockThisTabChange(blockedTabs[i], null);
+    }
+  }
+
   maybePersistState("processWindows");
 }
 

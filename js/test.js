@@ -60,36 +60,36 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
 
       ut.test_time += 20;
       
-      ut.on_blocked_site_allowed();
+      ut.onBlockedSiteAllowed();
 
       Assert.areEqual(ut.allowed(), true, "started");
 
       ut.test_time += 40;
 
-      ut.on_last_blocked_done();
+      ut.onLastBlockedDone();
 
       Assert.areEqual(ut.allowed(), true, "ended");
       ut.test_time += 40;
 
-      ut.on_blocked_site_allowed();
+      ut.onBlockedSiteAllowed();
       Assert.areEqual(ut.allowed(), true, "started2");
 
       ut.test_time += 40;
       Assert.areEqual(ut.allowed(), false, "pre-ended2");
 
-      ut.on_last_blocked_done();
+      ut.onLastBlockedDone();
       Assert.areEqual(ut.allowed(), false, "ended2");
 
       ut.test_time += 540;
       Assert.areEqual(ut.allowed(), true, "afterwait");
 
-      ut.on_blocked_site_allowed();
+      ut.onBlockedSiteAllowed();
       Assert.areEqual(ut.allowed(), true, "started3");
 
       ut.test_time += 20;
-      ut.on_last_blocked_done();
+      ut.onLastBlockedDone();
       ut.test_time += 20;
-      ut.on_blocked_site_allowed();
+      ut.onBlockedSiteAllowed();
       ut.test_time += 41;
       Assert.areEqual(ut.allowed(), false, "expired-again");
    },
@@ -97,11 +97,11 @@ YAHOO.csapuntz.TestCase = new YAHOO.tool.TestCase({
    testLongInterval : function() {
       var ut = newTracker();
 
-      ut.on_blocked_site_allowed();
-      ut.test_time += 1000;
+      ut.onBlockedSiteAllowed();
+      ut.test_time += 60;
       Assert.areEqual(ut.allowed(), false, "testLongInterval1");
  
-      ut.on_last_blocked_done();
+      ut.onLastBlockedDone();
       Assert.areEqual(ut.allowed(), false, "testLongInterval2");
    },
 
