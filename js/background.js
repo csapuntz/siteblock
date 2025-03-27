@@ -3,6 +3,8 @@
 import csapuntz from "./siteblock.js";
 
 var sb = csapuntz.siteblock.newSiteBlock();
+let initializePromise = null;
+let isInitialized = false;
 
 let creating; // A global promise to avoid concurrency issues
 async function setupOffscreenDocument(path) {
@@ -58,18 +60,21 @@ async function maybePersistState(details)
 
 chrome.tabs.onUpdated.addListener(
         async function(tabid, changeinfo, tab) {
+           await init();
            await processTab(tab);
            maybePersistState("onUpdated");
         });
 
 chrome.tabs.onRemoved.addListener(
         async function(tabid) {
+           await init();
            sb.blockThisTabChange(tabid, null);
            maybePersistState("onRemoved");
         });
 
 chrome.tabs.onActivated.addListener(
         async function(activeInfo) {
+            await init();
             const tab = await chrome.tabs.get(activeInfo.tabId);
             await processTab(tab);
             maybePersistState("onActivated");
@@ -111,6 +116,7 @@ async function processWindows(arrayWin) {
 
 chrome.storage.onChanged.addListener(async function(changes, namespace) {
   if ("settings" in changes) {
+    await init();
     var items = await chrome.storage.local.get(null);
     var opts = csapuntz.siteblock.read_options(items);
     sb.updatePaths(opts.rules);
@@ -121,52 +127,70 @@ chrome.storage.onChanged.addListener(async function(changes, namespace) {
 });
 
 async function init() {
-
-  var items = await chrome.storage.local.get(null);
-  console.log(items);
-  if (!("migrated" in items)) try {
-    await setupOffscreenDocument("../html/offscreen.html");
-
-    const migratedItems = await chrome.runtime.sendMessage({
-      action: "getLocalStorage"
-    });
-    console.log("Migrated:");
-    console.log(migratedItems);
-    await chrome.storage.local.set({
-      "state": migratedItems.state,
-      "settings": migratedItems.settings,
-    });
-    await chrome.storage.local.set({
-      "migrated": true
-    });
-    items = migratedItems;
-  } catch (e) {
-    console.log("Migration failed");
-    console.log(e);
+  if (isInitialized) {
+    return Promise.resolve();
+  }
+  
+  if (initializePromise) {
+    return initializePromise;
   }
 
-  if ("state" in items) {
-    sb.setState(JSON.parse(items['state']));
-    console.log("Restored state");
-    console.log(sb.getState());
-  }
-  const opts = csapuntz.siteblock.read_options(items);
-  sb.updatePaths(opts.rules);
-  sb.setAllowedUsage(opts.allowed, opts.period);
-
-  const arrayWin = await chrome.windows.getAll( { populate: true });
-  await processWindows(arrayWin);
-
-  const alarm = await chrome.alarms.get("checkBlockedTabs");
-  if (!alarm) {
-    await chrome.alarms.create("checkBlockedTabs", {
-      periodInMinutes: 1
-    });
-  }
+  initializePromise = (async () => {
+    try {
+      var items = await chrome.storage.local.get(null);
+      console.log(items);
+      if (!("migrated" in items)) try {
+        await setupOffscreenDocument("../html/offscreen.html");
+  
+        const migratedItems = await chrome.runtime.sendMessage({
+          action: "getLocalStorage"
+        });
+        console.log("Migrated:");
+        console.log(migratedItems);
+        await chrome.storage.local.set({
+          "state": migratedItems.state,
+          "settings": migratedItems.settings,
+        });
+        await chrome.storage.local.set({
+          "migrated": true
+        });
+        items = migratedItems;
+      } catch (e) {
+        console.log("Migration failed");
+        console.log(e);
+      }
+  
+      if ("state" in items) {
+        sb.setState(JSON.parse(items['state']));
+        console.log("Restored state");
+        console.log(sb.getState());
+      }
+      const opts = csapuntz.siteblock.read_options(items);
+      sb.updatePaths(opts.rules);
+      sb.setAllowedUsage(opts.allowed, opts.period);
+  
+      const arrayWin = await chrome.windows.getAll( { populate: true });
+      await processWindows(arrayWin);
+  
+      const alarm = await chrome.alarms.get("checkBlockedTabs");
+      if (!alarm) {
+        await chrome.alarms.create("checkBlockedTabs", {
+          periodInMinutes: 1
+        });
+      }
+      isInitialized = true;
+    } catch (error) {
+      console.error("Initialization failed:", error);
+      throw error;
+    } finally {
+      initializePromise = null;
+    }
+  })();
 }
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name == "checkBlockedTabs") {
+    await init();
     await checkBlockedTabs();
   }
 });
