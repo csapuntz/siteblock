@@ -4,7 +4,6 @@ import csapuntz from "./siteblock.js";
 
 var sb = csapuntz.siteblock.newSiteBlock();
 let initializePromise = null;
-let isInitialized = false;
 
 let creating; // A global promise to avoid concurrency issues
 async function setupOffscreenDocument(path) {
@@ -127,10 +126,6 @@ chrome.storage.onChanged.addListener(async function(changes, namespace) {
 });
 
 async function init() {
-  if (isInitialized) {
-    return Promise.resolve();
-  }
-  
   if (initializePromise) {
     return initializePromise;
   }
@@ -178,12 +173,14 @@ async function init() {
           periodInMinutes: 1
         });
       }
-      isInitialized = true;
     } catch (error) {
       console.error("Initialization failed:", error);
+      // We don't expect Chrome to call handlers if init fails, but
+      // if it does, don't keep throwing exceptions and don't rerun
+      initializePromise = Promise.resolve();
+      // Alternative: if init() fails return next time
+      // initializePromise = null;
       throw error;
-    } finally {
-      initializePromise = null;
     }
   })();
 }
