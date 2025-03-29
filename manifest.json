@@ -1,7 +1,7 @@
 {
    "manifest_version": 3,
    "name": "SiteBlock",
-   "version": "0.2.7",
+   "version": "0.2.8",
    "description": "Block sites to discourage procrastination",
    "options_page": "html/options.html",
    "background": {
