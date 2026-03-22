@@ -1,0 +1,24 @@
+{
+  "name": "siteblock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/csapuntz/siteblock.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/csapuntz/siteblock/issues"
+  },
+  "homepage": "https://github.com/csapuntz/siteblock#readme",
+  "devDependencies": {
+    "vitest": "^4.1.0"
+  }
+}

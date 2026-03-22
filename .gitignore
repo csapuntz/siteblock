@@ -20,3 +20,7 @@
 *.lai
 *.la
 *.a
+
+
+# Node
+node_modules/
