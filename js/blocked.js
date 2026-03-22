@@ -1,14 +1,16 @@
 // Copyright 2012 Constantine Sapuntzakis
 //
 
-function onload() {
+function handleLoad() {
     const url = new URLSearchParams(window.location.search).get('url');
     if (url) {
-        const u = document.getElementById("url");
-        u.href = url;
-        u.appendChild(document.createTextNode(url));
+        const u = /** @type {HTMLAnchorElement | null} */ (document.getElementById("url"));
+        if (u) {
+            u.href = url;
+            u.appendChild(document.createTextNode(url));
+        }
     }
 }
 
-document.addEventListener('DOMContentLoaded', onload);
+document.addEventListener('DOMContentLoaded', handleLoad);
 

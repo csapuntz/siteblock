@@ -3,9 +3,12 @@
 import csapuntz from "./siteblock.js";
 
 const sb = csapuntz.siteblock.newSiteBlock();
+/** @type {Promise<void> | null} */
 let initializePromise = null;
 
+/** @type {Promise<void> | undefined} */
 let creating; // A global promise to avoid concurrency issues
+/** @param {string} path */
 async function setupOffscreenDocument(path) {
   // Check all windows controlled by the service worker to see if one
   // of them is the offscreen document with the given path
@@ -29,22 +32,29 @@ async function setupOffscreenDocument(path) {
       justification: 'Grab old settings from local storage',
     });
     await creating;
-    creating = null;
+    creating = undefined;
   }
 }
 
+/**
+ * @param {number} id
+ * @param {string} tab_url
+ */
 async function block(id, tab_url)
 {
    await chrome.tabs.update(id,
            { "url" : chrome.runtime.getURL("../html/blocked.html") + "?url=" + escape(tab_url) });
 }
 
+/** @param {chrome.tabs.Tab} tab */
 async function processTab(tab)
 {
-   if(sb.blockThisTabChange(tab.id, tab.url))
-     await block(tab.id, tab.url);
+   if (tab.id === undefined) return;
+   if(sb.blockThisTabChange(tab.id, tab.url ?? null))
+     await block(tab.id, tab.url ?? '');
 }
 
+/** @param {string} details */
 async function maybePersistState(details)
 {
   const newState = JSON.stringify(sb.getState());
@@ -84,7 +94,7 @@ async function checkBlockedTabs() {
 
   for (const tabId of a) {
     const tab = await chrome.tabs.get(tabId);
-    await block(tabId, tab.url);
+    await block(tabId, tab.url ?? '');
   }
 
   sb.updateTimeUsed();
@@ -92,13 +102,15 @@ async function checkBlockedTabs() {
   maybePersistState("checkBlockedTabs");
 }
 
+/** @param {chrome.windows.Window[]} arrayWin */
 async function processWindows(arrayWin) {
+  /** @type {{ [tabId: number]: boolean }} */
   const tabsSeen = {};
 
   for (const w of arrayWin) {
-    for (const tab of w.tabs) {
+    for (const tab of w.tabs ?? []) {
       await processTab(tab);
-      tabsSeen[tab.id] = true;
+      if (tab.id !== undefined) tabsSeen[tab.id] = true;
     }
   }
 
@@ -155,7 +167,7 @@ async function init() {
       }
   
       if ("state" in items) {
-        sb.setState(JSON.parse(items['state']));
+        sb.setState(JSON.parse(/** @type {string} */ (items['state'])));
         console.log("Restored state");
         console.log(sb.getState());
       }
