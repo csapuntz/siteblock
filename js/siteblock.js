@@ -144,8 +144,8 @@ csapuntz.siteblock = (function () {
                         p = p.substr(1);
                         add = path_white;
                      }
-                     p = p.replace('.', '\\.');
-                     p = p.replace('*', '.*');
+                     p = p.replace(/\./g, '\\.');
+                     p = p.replace(/\*/g, '.*');
                      add.push(new RegExp(p, 'ig'));
                   }
                }

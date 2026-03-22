@@ -123,3 +123,120 @@ describe("Sample Tests", () => {
    });
 
 });
+
+describe("read_options", () => {
+   it("returns defaults for empty storage", () => {
+      const opts = csapuntz.siteblock.read_options({});
+      expect(opts.rules).toBe("");
+      expect(opts.allowed).toBe(0);
+      expect(opts.period).toBe(1440);
+   });
+
+   it("parses a fully-populated settings value", () => {
+      const opts = csapuntz.siteblock.read_options({
+         settings: JSON.stringify({ rules: "google.com", allowed: 15, period: 60 }),
+      });
+      expect(opts.rules).toBe("google.com");
+      expect(opts.allowed).toBe(15);
+      expect(opts.period).toBe(60);
+   });
+
+   it("fills in missing fields with defaults", () => {
+      const opts = csapuntz.siteblock.read_options({
+         settings: JSON.stringify({ rules: "cnn.com" }),
+      });
+      expect(opts.rules).toBe("cnn.com");
+      expect(opts.allowed).toBe(0);
+      expect(opts.period).toBe(1440);
+   });
+});
+
+describe("isBlocked edge cases", () => {
+   it("returns false before updatePaths is called", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      expect(sb.isBlocked("http://google.com")).toBe(false);
+   });
+
+   it("returns false for undefined URL", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      sb.updatePaths("google.com");
+      expect(sb.isBlocked(undefined)).toBe(false);
+   });
+
+   it("does not match a lookalike of a multi-dot domain", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      sb.updatePaths("bbc.co.uk");
+      expect(sb.isBlocked("http://bbc.co.uk")).toBe(true);
+      expect(sb.isBlocked("http://bbc.coXuk")).toBe(false);
+   });
+});
+
+describe("tab tracking", () => {
+   it("starts empty", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      expect(sb.emptyTracking()).toBe(true);
+   });
+
+   it("becomes non-empty after startTracking", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      sb.startTracking(1);
+      expect(sb.emptyTracking()).toBe(false);
+   });
+
+   it("does not double-add the same tab", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      sb.startTracking(1);
+      sb.startTracking(1);
+      expect(sb.stopTracking(1)).toBe(true);
+      expect(sb.emptyTracking()).toBe(true);
+   });
+
+   it("stopTracking returns true when tab was tracked", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      sb.startTracking(5);
+      expect(sb.stopTracking(5)).toBe(true);
+   });
+
+   it("stopTracking returns false for unknown tab", () => {
+      const sb = csapuntz.siteblock.newSiteBlock();
+      expect(sb.stopTracking(99)).toBe(false);
+   });
+});
+
+describe("state persistence", () => {
+   it("usage tracker round-trips accumulated time", () => {
+      const ut1 = newTracker();
+      ut1.onBlockedSiteAllowed();
+      ut1.test_time += 30;
+      ut1.onLastBlockedDone(); // 30s used of 60s allowed
+
+      const ut2 = csapuntz.siteblock.newUsageTracker();
+      ut2.setTimeCallback(() => ut1.test_time);
+      ut2.setInterval(1, 10);
+      ut2.setState(ut1.getState());
+
+      expect(ut2.allowed()).toBe(true); // 30s used < 60s allowed
+
+      ut2.onBlockedSiteAllowed();
+      ut1.test_time += 35; // 30 + 35 = 65s > 60s allowed
+      expect(ut2.allowed()).toBe(false);
+   });
+
+   it("siteblock restores tracked tabs across a restart", () => {
+      const sb1 = csapuntz.siteblock.newSiteBlock();
+      let time = 100;
+      sb1.updatePaths("google.com");
+      sb1.setAllowedUsage(1, 10);
+      sb1.setTimeCallback(() => time);
+      sb1.blockThisTabChange(1, "http://www.google.com");
+      time += 65; // allowance exhausted (> 60s)
+
+      const sb2 = csapuntz.siteblock.newSiteBlock();
+      sb2.updatePaths("google.com");
+      sb2.setAllowedUsage(1, 10);
+      sb2.setTimeCallback(() => time);
+      sb2.setState(sb1.getState());
+
+      expect(sb2.getBlockedTabs()).toEqual([1]);
+   });
+});
