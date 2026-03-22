@@ -1,23 +1,11 @@
 {
   "name": "siteblock",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "vitest run"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/csapuntz/siteblock.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "version": "0.2.9",
   "type": "module",
-  "bugs": {
-    "url": "https://github.com/csapuntz/siteblock/issues"
+  "scripts": {
+    "test": "vitest run",
+    "pack": "zip -r siteblock-$(node -p \"require('./package.json').version\").zip manifest.json html/ js/ --exclude 'js/*.test.js'"
   },
-  "homepage": "https://github.com/csapuntz/siteblock#readme",
   "devDependencies": {
     "vitest": "^4.1.0"
   }
