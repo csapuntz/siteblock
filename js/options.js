@@ -4,7 +4,7 @@ async function save_options() {
   const items = await chrome.storage.local.get(null);
   console.log(items);
 
-  var opts = csapuntz.siteblock.read_options(items);
+  const opts = csapuntz.siteblock.read_options(items);
 
   opts.rules = document.getElementById('rules').value;
   opts.allowed = Number(document.getElementById('allowed').value);
@@ -15,16 +15,16 @@ async function save_options() {
   });
 
   // Update status to let user know options were saved.
-  var status = document.getElementById("status");
+  const status = document.getElementById("status");
   status.innerHTML = "Options Saved.";
-  setTimeout(function () {
+  setTimeout(() => {
     status.innerHTML = "";
   }, 750);
 
 }
 
 function restore_options(items) {
-  var opts = csapuntz.siteblock.read_options(items);
+  const opts = csapuntz.siteblock.read_options(items);
 
   document.getElementById("rules").value = opts.rules;
   document.getElementById("allowed").value = opts.allowed;

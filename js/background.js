@@ -2,7 +2,7 @@
 
 import csapuntz from "./siteblock.js";
 
-var sb = csapuntz.siteblock.newSiteBlock();
+const sb = csapuntz.siteblock.newSiteBlock();
 let initializePromise = null;
 
 let creating; // A global promise to avoid concurrency issues
@@ -58,21 +58,21 @@ async function maybePersistState(details)
 }
 
 chrome.tabs.onUpdated.addListener(
-        async function(tabid, changeinfo, tab) {
+        async (tabid, changeinfo, tab) => {
            await init();
            await processTab(tab);
            maybePersistState("onUpdated");
         });
 
 chrome.tabs.onRemoved.addListener(
-        async function(tabid) {
+        async (tabid) => {
            await init();
            sb.blockThisTabChange(tabid, null);
            maybePersistState("onRemoved");
         });
 
 chrome.tabs.onActivated.addListener(
-        async function(activeInfo) {
+        async (activeInfo) => {
             await init();
             const tab = await chrome.tabs.get(activeInfo.tabId);
             await processTab(tab);
@@ -80,11 +80,11 @@ chrome.tabs.onActivated.addListener(
         });
 
 async function checkBlockedTabs() {
-  var a = sb.getBlockedTabs();
+  const a = sb.getBlockedTabs();
 
-  for (var i = 0; i < a.length; i++) {
-    const tab = await chrome.tabs.get(a[i]);
-    await block(a[i].id, tab.url);
+  for (const tabId of a) {
+    const tab = await chrome.tabs.get(tabId);
+    await block(tabId.id, tab.url);
   }
 
   sb.updateTimeUsed();
@@ -93,31 +93,30 @@ async function checkBlockedTabs() {
 }
 
 async function processWindows(arrayWin) {
-  var tabsSeen = {};
+  const tabsSeen = {};
 
-  for (var i = 0; i < arrayWin.length; i++) {
-    var w = arrayWin[i];
-    for (var ti = 0; ti < w.tabs.length; ti++) {
-      await processTab(w.tabs[ti]);
-      tabsSeen[w.tabs[ti].id] = true;
+  for (const w of arrayWin) {
+    for (const tab of w.tabs) {
+      await processTab(tab);
+      tabsSeen[tab.id] = true;
     }
   }
 
-  var blockedTabs = sb.getBlockedTabs();
-  for (var i = 0; i < blockedTabs.length; i++) {
-    if (!(blockedTabs[i] in tabsSeen)) {
-      sb.blockThisTabChange(blockedTabs[i], null);
+  const blockedTabs = sb.getBlockedTabs();
+  for (const tabId of blockedTabs) {
+    if (!(tabId in tabsSeen)) {
+      sb.blockThisTabChange(tabId, null);
     }
   }
 
   maybePersistState("processWindows");
 }
 
-chrome.storage.onChanged.addListener(async function(changes, namespace) {
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
   if ("settings" in changes) {
     await init();
-    var items = await chrome.storage.local.get(null);
-    var opts = csapuntz.siteblock.read_options(items);
+    const items = await chrome.storage.local.get(null);
+    const opts = csapuntz.siteblock.read_options(items);
     sb.updatePaths(opts.rules);
     sb.setAllowedUsage(opts.allowed, opts.period);
     const arrayWin = await chrome.windows.getAll( { populate: true });
@@ -132,7 +131,7 @@ async function init() {
 
   initializePromise = (async () => {
     try {
-      var items = await chrome.storage.local.get(null);
+      let items = await chrome.storage.local.get(null);
       console.log(items);
       if (!("migrated" in items)) try {
         await setupOffscreenDocument("../html/offscreen.html");
