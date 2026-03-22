@@ -49,7 +49,7 @@ async function maybePersistState(details)
 {
   const newState = JSON.stringify(sb.getState());
   const oldState = await chrome.storage.local.get("state");
-  if (!("state" in oldState) || oldState.state != newState) {
+  if (!("state" in oldState) || oldState.state !== newState) {
     console.log("Due to " + details + " saving state new state: " + newState);
     await chrome.storage.local.set({
       "state": newState,
@@ -84,7 +84,7 @@ async function checkBlockedTabs() {
 
   for (const tabId of a) {
     const tab = await chrome.tabs.get(tabId);
-    await block(tabId.id, tab.url);
+    await block(tabId, tab.url);
   }
 
   sb.updateTimeUsed();
@@ -112,7 +112,7 @@ async function processWindows(arrayWin) {
   maybePersistState("processWindows");
 }
 
-chrome.storage.onChanged.addListener(async (changes, namespace) => {
+chrome.storage.onChanged.addListener(async (changes, _namespace) => {
   if ("settings" in changes) {
     await init();
     const items = await chrome.storage.local.get(null);
@@ -185,7 +185,7 @@ async function init() {
 }
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name == "checkBlockedTabs") {
+  if (alarm.name === "checkBlockedTabs") {
     await init();
     await checkBlockedTabs();
   }

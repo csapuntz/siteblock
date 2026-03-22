@@ -10,7 +10,7 @@ class UsageTracker {
    #last_end = -1;
 
    #check_reset(now) {
-      if (this.#last_end != -1 &&
+      if (this.#last_end !== -1 &&
          (now - this.#last_end) >= (this.#time_period - this.#time_allowed)) {
          this.#time_used = 0;
       }
@@ -21,13 +21,13 @@ class UsageTracker {
       this.#check_reset(time);
       // If we're in an existing interval, count it
       let time_adj = 0;
-      if (this.#last_start != -1 && time > this.#last_start && time < this.#last_start + 120)
+      if (this.#last_start !== -1 && time > this.#last_start && time < this.#last_start + 120)
          time_adj = (time - this.#last_start);
       return (this.#time_used + time_adj);
    }
 
    onBlockedSiteAllowed = () => {
-      if (this.#last_start == -1) {
+      if (this.#last_start === -1) {
          this.#last_start = this.#time_cb();
       }
    }
@@ -38,7 +38,7 @@ class UsageTracker {
    }
 
    updateTimeUsed = () => {
-      if (this.#last_start != -1) {
+      if (this.#last_start !== -1) {
          const end = this.#time_cb();
          if (end > this.#last_start + 120) {
             // Don't count the time
@@ -106,13 +106,13 @@ class SiteBlock {
 
       if (url !== undefined && url.match(/https?:/)) {
          for (const pattern of this.#path_black) {
-            if (url.search(pattern) != -1) {
+            if (url.search(pattern) !== -1) {
                blocked = true;
                break;
             }
          }
          for (const pattern of this.#path_white) {
-            if (url.search(pattern) != -1) {
+            if (url.search(pattern) !== -1) {
                blocked = false;
                break;
             }
@@ -145,14 +145,14 @@ class SiteBlock {
 
    stopTracking = (tabid) => {
       const idx = this.#tracked_tabs.indexOf(tabid);
-      if (idx != -1) {
+      if (idx !== -1) {
          this.#tracked_tabs.splice(idx, 1);
          return true;
       }
       return false;
    }
 
-   emptyTracking = () => this.#tracked_tabs.length == 0;
+   emptyTracking = () => this.#tracked_tabs.length === 0;
 
    blockThisTabChange = (tabid, url) => {
       const blocked = (url !== null) ? this.isBlocked(url) : false;

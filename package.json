@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "lint": "eslint js/",
     "pack": "zip -r siteblock-$(node -p \"require('./package.json').version\").zip manifest.json html/ js/ --exclude 'js/*.test.js'"
   },
   "devDependencies": {
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
     "vitest": "^4.1.0"
   }
 }

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import csapuntz from "./siteblock.js";
 
 function newTracker() {
-   var ut = csapuntz.siteblock.newUsageTracker();
+   let ut = csapuntz.siteblock.newUsageTracker();
    ut.test_time = 0;
 
    ut.setTimeCallback(function() {
@@ -21,7 +21,7 @@ describe("Sample Tests", () => {
    });
 
    it("blacklist blocking", () => {
-      var sb = csapuntz.siteblock.newSiteBlock();
+      let sb = csapuntz.siteblock.newSiteBlock();
       sb.updatePaths("google.com\ncnn");
       expect(sb.isBlocked("http://google.com")).toBe(true);
       expect(sb.isBlocked("https://cnn.com")).toBe(true);
@@ -30,7 +30,7 @@ describe("Sample Tests", () => {
    });
 
    it("whitelist (allow-all-except)", () => {
-      var sb = csapuntz.siteblock.newSiteBlock();
+      let sb = csapuntz.siteblock.newSiteBlock();
       sb.updatePaths("*\n+google.com");
       expect(sb.isBlocked("http://google.com")).toBe(false);
       expect(sb.isBlocked("https://cnn.com")).toBe(true);
@@ -39,7 +39,7 @@ describe("Sample Tests", () => {
    });
 
    it("usage tracker", () => {
-      var ut = newTracker();
+      let ut = newTracker();
 
       expect(ut.allowed()).toBe(true);  // initial
 
@@ -79,7 +79,7 @@ describe("Sample Tests", () => {
    });
 
    it("long interval", () => {
-      var ut = newTracker();
+      let ut = newTracker();
 
       ut.onBlockedSiteAllowed();
       ut.test_time += 60;
@@ -90,8 +90,8 @@ describe("Sample Tests", () => {
    });
 
    it("timer and full blocking flow", () => {
-      var sb = csapuntz.siteblock.newSiteBlock();
-      var time = 100;
+      let sb = csapuntz.siteblock.newSiteBlock();
+      let time = 100;
 
       sb.updatePaths("google.com");
       // 1 minute allowed per 10-minute period
@@ -108,7 +108,7 @@ describe("Sample Tests", () => {
       expect(sb.blockThisTabChange(1, "http://www.google.com")).toBe(false);  // mon2
 
       time += 60;
-      var bt = sb.getBlockedTabs();
+      let bt = sb.getBlockedTabs();
       expect(bt.length).toBe(1);  // blocked tabs
       expect(bt[0]).toBe(1);      // google
 
