@@ -1,46 +1,242 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
+        <meta charset="UTF-8" />
         <title>SiteBlock Extension Options</title>
-
         <script type="module" src="../js/options.js"></script>
+        <style>
+            :root {
+                --color-primary:        #4f46e5;
+                --color-primary-dark:   #4338ca;
+                --color-text:           #1a1a2e;
+                --color-text-secondary: #374151;
+                --color-text-muted:     #6b7280;
+                --color-border:         #d1d5db;
+            }
 
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                font-size: 14px;
+                background: #f0f2f5;
+                color: var(--color-text);
+                min-width: 480px;
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 20px;
+                font-weight: 700;
+                color: var(--color-text);
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            h1::before {
+                content: "🧱";
+                font-size: 22px;
+            }
+
+            h2 {
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--color-text-secondary);
+                margin-bottom: 12px;
+            }
+
+            .card {
+                background: #ffffff;
+                border-radius: 12px;
+                padding: 24px;
+                margin-bottom: 16px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            }
+
+            #status {
+                font-size: 13px;
+                font-weight: 500;
+                color: #16a34a;
+                min-height: 20px;
+                margin-bottom: 8px;
+            }
+
+            /* Sync toggle */
+            .sync-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .sync-row input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                accent-color: var(--color-primary);
+                margin-top: 2px;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            .sync-label {
+                font-weight: 500;
+                cursor: pointer;
+            }
+
+            .sync-hint {
+                font-size: 12px;
+                color: var(--color-text-muted);
+                margin-top: 4px;
+            }
+
+            /* Textarea */
+            .field-label {
+                display: block;
+                font-weight: 600;
+                margin-top: 20px;
+                margin-bottom: 8px;
+                color: var(--color-text-secondary);
+            }
+
+            textarea#rules {
+                width: 100%;
+                height: 220px;
+                border: 1px solid var(--color-border);
+                border-radius: 8px;
+                padding: 10px 12px;
+                font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+                font-size: 13px;
+                color: var(--color-text);
+                background: #f9fafb;
+                resize: vertical;
+                outline: none;
+                transition: border-color 0.15s, box-shadow 0.15s;
+            }
+
+            textarea#rules:focus {
+                border-color: var(--color-primary);
+                box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+                background: #fff;
+            }
+
+            /* Unblock row */
+            .unblock-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                color: var(--color-text-secondary);
+                margin-top: 16px;
+            }
+
+            .unblock-row input[type="text"] {
+                width: 56px;
+                border: 1px solid var(--color-border);
+                border-radius: 6px;
+                padding: 5px 8px;
+                font-size: 14px;
+                text-align: center;
+                outline: none;
+                transition: border-color 0.15s, box-shadow 0.15s;
+            }
+
+            .unblock-row input[type="text"]:focus {
+                border-color: var(--color-primary);
+                box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+            }
+
+            /* Save button */
+            #submit {
+                margin-top: 20px;
+                padding: 9px 24px;
+                background: var(--color-primary);
+                color: #fff;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.15s, transform 0.1s;
+            }
+
+            #submit:hover  { background: var(--color-primary-dark); }
+            #submit:active { transform: scale(0.97); }
+
+            /* Help section */
+            .help-card p {
+                color: #4b5563;
+                line-height: 1.6;
+                margin-bottom: 12px;
+            }
+
+            pre {
+                background: #f3f4f6;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 12px 14px;
+                font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+                font-size: 13px;
+                color: var(--color-text);
+                margin-bottom: 16px;
+            }
+
+            .footer {
+                text-align: center;
+                margin-top: 4px;
+            }
+
+            .footer a {
+                font-size: 13px;
+                color: var(--color-text-muted);
+                text-decoration: none;
+            }
+
+            .footer a:hover { color: var(--color-primary); text-decoration: underline; }
+        </style>
     </head>
 
     <body>
-	<div id="status"></div>
-	<form>
-        <label><input type="checkbox" id="use_sync" /> Use Chrome sync storage</label>
-        <br />
-        <small>Settings will sync across devices when Chrome sync is enabled in your profile.</small>
-        <br />
-        <br />
-	Sites to Block:<br />
-	<textarea spellcheck="false" id="rules" cols="60" rows="15"></textarea>
-        <br />
-        Unblock for <input type="text" id="allowed" cols="6" /> minutes every <input type="text" id="period" cols="6" /> hours.
-        <br />
-	<input id="submit" type="button" value="Save Options" />
-        </form>
+        <h1>SiteBlock Options</h1>
 
-<h2>Help</h2>
+        <div class="card">
+            <div id="status"></div>
+            <form>
+                <div class="sync-row">
+                    <input type="checkbox" id="use_sync" />
+                    <div>
+                        <label class="sync-label" for="use_sync">Use Chrome sync storage</label>
+                        <div class="sync-hint">Settings will sync across devices when Chrome sync is enabled in your profile.</div>
+                    </div>
+                </div>
 
-<p>List the websites you want to block, one per line. For example:</p>
-<pre>
-cnn.com
+                <label class="field-label" for="rules">Sites to Block</label>
+                <textarea spellcheck="false" id="rules"></textarea>
+
+                <div class="unblock-row">
+                    Unblock for <input type="text" id="allowed" aria-label="Unblock duration in minutes" /> minutes every <input type="text" id="period" aria-label="Period in hours" /> hours.
+                </div>
+
+                <button id="submit" type="button">Save Options</button>
+            </form>
+        </div>
+
+        <div class="card help-card">
+            <h2>Help</h2>
+            <p>List the websites you want to block, one per line. For example:</p>
+            <pre>cnn.com
 nytimes.com
 google.com/news
 //x.com
-www.chess.com
-</pre>
-
-<p>If you would like to block all sites except for a select few, enter a '*'
-on the first line and the websites you wish to allow with a '+' before each line. For example:</p>
-<pre>
-*
+www.chess.com</pre>
+            <p>To block all sites except a select few, enter <code>*</code> on the first line and prefix allowed sites with <code>+</code>:</p>
+            <pre>*
 +stackoverflow.com
-+msdn.microsoft.com
-</pre>
++msdn.microsoft.com</pre>
+        </div>
 
-<a href="https://github.com/csapuntz/siteblock/">Home page</a>
-</body>
+        <div class="footer">
+            <a href="https://github.com/csapuntz/siteblock/">Home page</a>
+        </div>
+    </body>
 </html>
