@@ -125,7 +125,7 @@ class SiteBlock {
   isBlocked = (url) => {
     let blocked = false;
 
-    if (url !== undefined && url.match(/https?:/)) {
+    if (url?.match(/https?:/)) {
       for (const pattern of this.#path_black) {
         if (url.search(pattern) !== -1) {
           blocked = true;
@@ -208,9 +208,7 @@ class SiteBlock {
  */
 function read_options(stg) {
   const opts =
-    "settings" in stg
-      ? JSON.parse(/** @type {string} */ (stg["settings"]))
-      : {};
+    "settings" in stg ? JSON.parse(/** @type {string} */ (stg.settings)) : {};
   const { rules = "", allowed = 0, period = 1440 } = opts;
   return { ...opts, rules, allowed, period };
 }

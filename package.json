@@ -6,8 +6,7 @@
     "test": "vitest run",
     "format": "biome format --write",
     "format:check": "biome format",
-    "biome:lint": "biome lint",
-    "lint": "eslint js/",
+    "lint": "eslint js/ && biome lint",
     "typecheck": "tsc",
     "pack": "zip -r siteblock-$(node -p \"require('./package.json').version\").zip manifest.json html/ js/ --exclude 'js/*.test.js'"
   },

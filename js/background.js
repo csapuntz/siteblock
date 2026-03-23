@@ -42,8 +42,7 @@ async function setupOffscreenDocument(path) {
  */
 async function block(id, tab_url) {
   await chrome.tabs.update(id, {
-    url:
-      chrome.runtime.getURL("../html/blocked.html") + "?url=" + escape(tab_url),
+    url: `${chrome.runtime.getURL("../html/blocked.html")}?url=${escape(tab_url)}`,
   });
 }
 
@@ -72,14 +71,14 @@ async function maybePersistState(details) {
   const newState = JSON.stringify(sb.getState());
   const oldState = await chrome.storage.local.get("state");
   if (!("state" in oldState) || oldState.state !== newState) {
-    console.log("Due to " + details + " saving state new state: " + newState);
+    console.log(`Due to ${details} saving state new state: ${newState}`);
     await chrome.storage.local.set({
       state: newState,
     });
   }
 }
 
-chrome.tabs.onUpdated.addListener(async (tabid, changeinfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (_tabid, _changeinfo, tab) => {
   await init();
   await processTab(tab);
   maybePersistState("onUpdated");
@@ -214,7 +213,7 @@ async function init() {
       const items = await getStorageItems(localItems);
 
       if ("state" in localItems) {
-        sb.setState(JSON.parse(/** @type {string} */ (localItems["state"])));
+        sb.setState(JSON.parse(/** @type {string} */ (localItems.state)));
         console.log("Restored state");
         console.log(sb.getState());
       }

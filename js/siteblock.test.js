@@ -2,12 +2,10 @@ import { describe, it, expect } from "vitest";
 import csapuntz from "./siteblock.js";
 
 function newTracker() {
-  let ut = csapuntz.siteblock.newUsageTracker();
+  const ut = csapuntz.siteblock.newUsageTracker();
   ut.test_time = 0;
 
-  ut.setTimeCallback(function () {
-    return ut.test_time;
-  });
+  ut.setTimeCallback(() => ut.test_time);
 
   ut.setInterval(1, 10);
 
@@ -20,7 +18,7 @@ describe("Sample Tests", () => {
   });
 
   it("blacklist blocking", () => {
-    let sb = csapuntz.siteblock.newSiteBlock();
+    const sb = csapuntz.siteblock.newSiteBlock();
     sb.updatePaths("google.com\ncnn");
     expect(sb.isBlocked("http://google.com")).toBe(true);
     expect(sb.isBlocked("https://cnn.com")).toBe(true);
@@ -29,7 +27,7 @@ describe("Sample Tests", () => {
   });
 
   it("whitelist (allow-all-except)", () => {
-    let sb = csapuntz.siteblock.newSiteBlock();
+    const sb = csapuntz.siteblock.newSiteBlock();
     sb.updatePaths("*\n+google.com");
     expect(sb.isBlocked("http://google.com")).toBe(false);
     expect(sb.isBlocked("https://cnn.com")).toBe(true);
@@ -38,7 +36,7 @@ describe("Sample Tests", () => {
   });
 
   it("usage tracker", () => {
-    let ut = newTracker();
+    const ut = newTracker();
 
     expect(ut.allowed()).toBe(true); // initial
 
@@ -78,7 +76,7 @@ describe("Sample Tests", () => {
   });
 
   it("long interval", () => {
-    let ut = newTracker();
+    const ut = newTracker();
 
     ut.onBlockedSiteAllowed();
     ut.test_time += 60;
@@ -89,15 +87,13 @@ describe("Sample Tests", () => {
   });
 
   it("timer and full blocking flow", () => {
-    let sb = csapuntz.siteblock.newSiteBlock();
+    const sb = csapuntz.siteblock.newSiteBlock();
     let time = 100;
 
     sb.updatePaths("google.com");
     // 1 minute allowed per 10-minute period
     sb.setAllowedUsage(1, 10);
-    sb.setTimeCallback(function () {
-      return time;
-    });
+    sb.setTimeCallback(() => time);
 
     // Visit google at 100 seconds
     expect(sb.blockThisTabChange(1, "http://www.google.com")).toBe(false); // mon1
@@ -109,7 +105,7 @@ describe("Sample Tests", () => {
     expect(sb.blockThisTabChange(1, "http://www.google.com")).toBe(false); // mon2
 
     time += 60;
-    let bt = sb.getBlockedTabs();
+    const bt = sb.getBlockedTabs();
     expect(bt.length).toBe(1); // blocked tabs
     expect(bt[0]).toBe(1); // google
 

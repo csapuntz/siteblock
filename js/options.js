@@ -44,8 +44,7 @@ async function save_options() {
     }
     await chrome.storage.local.set({ use_sync: use_sync });
   } catch (e) {
-    status.textContent =
-      "Error saving options: " + (e instanceof Error ? e.message : String(e));
+    status.textContent = `Error saving options: ${e instanceof Error ? e.message : String(e)}`;
     return;
   }
 
