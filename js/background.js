@@ -54,6 +54,19 @@ async function processTab(tab)
      await block(tab.id, tab.url ?? '');
 }
 
+/**
+ * Returns settings items from the active storage (sync if enabled, otherwise local).
+ * @param {{ [key: string]: unknown }} [localItems] already-fetched local items (optional, only used when sync is disabled)
+ * @returns {Promise<{ [key: string]: unknown }>}
+ */
+async function getStorageItems(localItems) {
+  const local = localItems ?? await chrome.storage.local.get(null) ?? {};
+  if (local.use_sync) {
+    return await chrome.storage.sync.get(null) ?? {};
+  }
+  return local;
+}
+
 /** @param {string} details */
 async function maybePersistState(details)
 {
@@ -124,15 +137,34 @@ async function processWindows(arrayWin) {
   maybePersistState("processWindows");
 }
 
-chrome.storage.onChanged.addListener(async (changes, _namespace) => {
+/**
+ * Reload rules/usage from storage into the running SiteBlock instance and
+ * re-evaluate all open windows.
+ */
+async function reloadSettings() {
+  const localItems = await chrome.storage.local.get(null);
+  const items = await getStorageItems(localItems);
+  const opts = csapuntz.siteblock.read_options(items);
+  sb.updatePaths(opts.rules);
+  sb.setAllowedUsage(opts.allowed, opts.period);
+  const arrayWin = await chrome.windows.getAll({ populate: true });
+  await processWindows(arrayWin);
+}
+
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
   if ("settings" in changes) {
     await init();
-    const items = await chrome.storage.local.get(null);
-    const opts = csapuntz.siteblock.read_options(items);
-    sb.updatePaths(opts.rules);
-    sb.setAllowedUsage(opts.allowed, opts.period);
-    const arrayWin = await chrome.windows.getAll( { populate: true });
-    await processWindows(arrayWin);
+    const localItems = await chrome.storage.local.get(null);
+    const use_sync = localItems.use_sync ?? false;
+    // Only react when the change is from the storage we're currently using.
+    if ((use_sync && namespace === "sync") || (!use_sync && namespace === "local")) {
+      await reloadSettings();
+    }
+  }
+  // When the user toggles sync on/off, reload settings from the new location.
+  if ("use_sync" in changes && namespace === "local") {
+    await init();
+    await reloadSettings();
   }
 });
 
@@ -143,11 +175,11 @@ async function init() {
 
   initializePromise = (async () => {
     try {
-      let items = await chrome.storage.local.get(null);
-      console.log(items);
-      if (!("migrated" in items)) try {
+      let localItems = await chrome.storage.local.get(null);
+      console.log(localItems);
+      if (!("migrated" in localItems)) try {
         await setupOffscreenDocument("../html/offscreen.html");
-  
+
         const migratedItems = await chrome.runtime.sendMessage({
           action: "getLocalStorage"
         });
@@ -160,14 +192,29 @@ async function init() {
         await chrome.storage.local.set({
           "migrated": true
         });
-        items = migratedItems;
+        // Re-fetch so localItems reflects what was just written.
+        localItems = await chrome.storage.local.get(null);
       } catch (e) {
         console.log("Migration failed");
         console.log(e);
       }
-  
-      if ("state" in items) {
-        sb.setState(JSON.parse(/** @type {string} */ (items['state'])));
+
+      // Determine whether sync storage should be used.
+      // This is only resolved once (first run / fresh install).
+      // Fresh installs have no "settings" yet → default to sync enabled.
+      // Users migrating from an older version already have "settings" in
+      // local storage → default to sync disabled.
+      if (!("use_sync" in localItems)) {
+        const use_sync = !("settings" in localItems);
+        await chrome.storage.local.set({ use_sync });
+        localItems = { ...localItems, use_sync };
+      }
+
+      // Read settings from the active storage (sync or local).
+      const items = await getStorageItems(localItems);
+
+      if ("state" in localItems) {
+        sb.setState(JSON.parse(/** @type {string} */ (localItems['state'])));
         console.log("Restored state");
         console.log(sb.getState());
       }
