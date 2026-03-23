@@ -4,11 +4,15 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "format": "biome format --write",
+    "format:check": "biome format",
+    "biome:lint": "biome lint",
     "lint": "eslint js/",
     "typecheck": "tsc",
     "pack": "zip -r siteblock-$(node -p \"require('./package.json').version\").zip manifest.json html/ js/ --exclude 'js/*.test.js'"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.8",
     "@types/chrome": "^0.1.38",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",

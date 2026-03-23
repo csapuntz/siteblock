@@ -14,8 +14,8 @@ async function setupOffscreenDocument(path) {
   // of them is the offscreen document with the given path
   const offscreenUrl = chrome.runtime.getURL(path);
   const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT'],
-    documentUrls: [offscreenUrl]
+    contextTypes: ["OFFSCREEN_DOCUMENT"],
+    documentUrls: [offscreenUrl],
   });
 
   if (existingContexts.length > 0) {
@@ -28,8 +28,8 @@ async function setupOffscreenDocument(path) {
   } else {
     creating = chrome.offscreen.createDocument({
       url: path,
-      reasons: ['LOCAL_STORAGE'],
-      justification: 'Grab old settings from local storage',
+      reasons: ["LOCAL_STORAGE"],
+      justification: "Grab old settings from local storage",
     });
     await creating;
     creating = undefined;
@@ -40,18 +40,18 @@ async function setupOffscreenDocument(path) {
  * @param {number} id
  * @param {string} tab_url
  */
-async function block(id, tab_url)
-{
-   await chrome.tabs.update(id,
-           { "url" : chrome.runtime.getURL("../html/blocked.html") + "?url=" + escape(tab_url) });
+async function block(id, tab_url) {
+  await chrome.tabs.update(id, {
+    url:
+      chrome.runtime.getURL("../html/blocked.html") + "?url=" + escape(tab_url),
+  });
 }
 
 /** @param {chrome.tabs.Tab} tab */
-async function processTab(tab)
-{
-   if (tab.id === undefined) return;
-   if(sb.blockThisTabChange(tab.id, tab.url ?? null))
-     await block(tab.id, tab.url ?? '');
+async function processTab(tab) {
+  if (tab.id === undefined) return;
+  if (sb.blockThisTabChange(tab.id, tab.url ?? null))
+    await block(tab.id, tab.url ?? "");
 }
 
 /**
@@ -60,54 +60,50 @@ async function processTab(tab)
  * @returns {Promise<{ [key: string]: unknown }>}
  */
 async function getStorageItems(localItems) {
-  const local = localItems ?? await chrome.storage.local.get(null) ?? {};
+  const local = localItems ?? (await chrome.storage.local.get(null)) ?? {};
   if (local.use_sync) {
-    return await chrome.storage.sync.get(null) ?? {};
+    return (await chrome.storage.sync.get(null)) ?? {};
   }
   return local;
 }
 
 /** @param {string} details */
-async function maybePersistState(details)
-{
+async function maybePersistState(details) {
   const newState = JSON.stringify(sb.getState());
   const oldState = await chrome.storage.local.get("state");
   if (!("state" in oldState) || oldState.state !== newState) {
     console.log("Due to " + details + " saving state new state: " + newState);
     await chrome.storage.local.set({
-      "state": newState,
-    })
+      state: newState,
+    });
   }
 }
 
-chrome.tabs.onUpdated.addListener(
-        async (tabid, changeinfo, tab) => {
-           await init();
-           await processTab(tab);
-           maybePersistState("onUpdated");
-        });
+chrome.tabs.onUpdated.addListener(async (tabid, changeinfo, tab) => {
+  await init();
+  await processTab(tab);
+  maybePersistState("onUpdated");
+});
 
-chrome.tabs.onRemoved.addListener(
-        async (tabid) => {
-           await init();
-           sb.blockThisTabChange(tabid, null);
-           maybePersistState("onRemoved");
-        });
+chrome.tabs.onRemoved.addListener(async (tabid) => {
+  await init();
+  sb.blockThisTabChange(tabid, null);
+  maybePersistState("onRemoved");
+});
 
-chrome.tabs.onActivated.addListener(
-        async (activeInfo) => {
-            await init();
-            const tab = await chrome.tabs.get(activeInfo.tabId);
-            await processTab(tab);
-            maybePersistState("onActivated");
-        });
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  await init();
+  const tab = await chrome.tabs.get(activeInfo.tabId);
+  await processTab(tab);
+  maybePersistState("onActivated");
+});
 
 async function checkBlockedTabs() {
   const a = sb.getBlockedTabs();
 
   for (const tabId of a) {
     const tab = await chrome.tabs.get(tabId);
-    await block(tabId, tab.url ?? '');
+    await block(tabId, tab.url ?? "");
   }
 
   sb.updateTimeUsed();
@@ -157,7 +153,10 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
     const localItems = await chrome.storage.local.get(null);
     const use_sync = localItems.use_sync ?? false;
     // Only react when the change is from the storage we're currently using.
-    if ((use_sync && namespace === "sync") || (!use_sync && namespace === "local")) {
+    if (
+      (use_sync && namespace === "sync") ||
+      (!use_sync && namespace === "local")
+    ) {
       await reloadSettings();
     }
   }
@@ -177,27 +176,28 @@ async function init() {
     try {
       let localItems = await chrome.storage.local.get(null);
       console.log(localItems);
-      if (!("migrated" in localItems)) try {
-        await setupOffscreenDocument("../html/offscreen.html");
+      if (!("migrated" in localItems))
+        try {
+          await setupOffscreenDocument("../html/offscreen.html");
 
-        const migratedItems = await chrome.runtime.sendMessage({
-          action: "getLocalStorage"
-        });
-        console.log("Migrated:");
-        console.log(migratedItems);
-        await chrome.storage.local.set({
-          "state": migratedItems.state,
-          "settings": migratedItems.settings,
-        });
-        await chrome.storage.local.set({
-          "migrated": true
-        });
-        // Re-fetch so localItems reflects what was just written.
-        localItems = await chrome.storage.local.get(null);
-      } catch (e) {
-        console.log("Migration failed");
-        console.log(e);
-      }
+          const migratedItems = await chrome.runtime.sendMessage({
+            action: "getLocalStorage",
+          });
+          console.log("Migrated:");
+          console.log(migratedItems);
+          await chrome.storage.local.set({
+            state: migratedItems.state,
+            settings: migratedItems.settings,
+          });
+          await chrome.storage.local.set({
+            migrated: true,
+          });
+          // Re-fetch so localItems reflects what was just written.
+          localItems = await chrome.storage.local.get(null);
+        } catch (e) {
+          console.log("Migration failed");
+          console.log(e);
+        }
 
       // Determine whether sync storage should be used.
       // This is only resolved once (first run / fresh install).
@@ -214,21 +214,21 @@ async function init() {
       const items = await getStorageItems(localItems);
 
       if ("state" in localItems) {
-        sb.setState(JSON.parse(/** @type {string} */ (localItems['state'])));
+        sb.setState(JSON.parse(/** @type {string} */ (localItems["state"])));
         console.log("Restored state");
         console.log(sb.getState());
       }
       const opts = csapuntz.siteblock.read_options(items);
       sb.updatePaths(opts.rules);
       sb.setAllowedUsage(opts.allowed, opts.period);
-  
-      const arrayWin = await chrome.windows.getAll( { populate: true });
+
+      const arrayWin = await chrome.windows.getAll({ populate: true });
       await processWindows(arrayWin);
-  
+
       const alarm = await chrome.alarms.get("checkBlockedTabs");
       if (!alarm) {
         await chrome.alarms.create("checkBlockedTabs", {
-          periodInMinutes: 1
+          periodInMinutes: 1,
         });
       }
     } catch (error) {
