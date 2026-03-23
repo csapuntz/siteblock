@@ -30,9 +30,9 @@ async function save_options() {
       /** @type {HTMLInputElement} */ (document.getElementById("period")).value,
     ) * 60;
 
-  const use_sync = /** @type {HTMLInputElement} */ (
-    document.getElementById("use_sync")
-  ).checked;
+  const use_sync =
+    /** @type {HTMLSelectElement} */ (document.getElementById("use_sync"))
+      .value === "sync";
   const settingsJson = JSON.stringify(opts);
 
   const status = /** @type {HTMLElement} */ (document.getElementById("status"));
@@ -71,17 +71,16 @@ function apply_opts_to_form(opts) {
  */
 function restore_options(items, use_sync) {
   apply_opts_to_form(csapuntz.siteblock.read_options(items));
-  /** @type {HTMLInputElement} */ (
-    document.getElementById("use_sync")
-  ).checked = use_sync;
+  /** @type {HTMLSelectElement} */ (document.getElementById("use_sync")).value =
+    use_sync ? "sync" : "local";
 }
 
-// Reload the settings fields from whichever storage the checkbox now points at,
+// Reload the settings fields from whichever storage the selector now points at,
 // so the user sees the correct values before hitting Save.
 async function on_use_sync_changed() {
-  const use_sync = /** @type {HTMLInputElement} */ (
-    document.getElementById("use_sync")
-  ).checked;
+  const use_sync =
+    /** @type {HTMLSelectElement} */ (document.getElementById("use_sync"))
+      .value === "sync";
   const items = use_sync
     ? ((await chrome.storage.sync.get(null)) ?? {})
     : await chrome.storage.local.get(null);
@@ -97,7 +96,7 @@ async function on_load() {
   /** @type {HTMLElement} */ (
     document.querySelector("#submit")
   ).addEventListener("click", save_options);
-  /** @type {HTMLInputElement} */ (
+  /** @type {HTMLSelectElement} */ (
     document.getElementById("use_sync")
   ).addEventListener("change", on_use_sync_changed);
 }

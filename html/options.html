@@ -59,35 +59,42 @@
                 font-size: 13px;
                 font-weight: 500;
                 color: #16a34a;
-                min-height: 20px;
-                margin-bottom: 8px;
+                margin-top: 10px;
             }
 
-            /* Sync toggle */
-            .sync-row {
-                display: flex;
-                align-items: flex-start;
-                gap: 10px;
+            /* Storage selector */
+            .storage-row {
+                margin-bottom: 4px;
             }
 
-            .sync-row input[type="checkbox"] {
-                width: 16px;
-                height: 16px;
-                accent-color: var(--color-primary);
-                margin-top: 2px;
+            .storage-row label {
+                display: block;
+                font-weight: 600;
+                margin-bottom: 6px;
+                color: var(--color-text-secondary);
+            }
+
+            select#use_sync {
+                border: 1px solid var(--color-border);
+                border-radius: 6px;
+                padding: 5px 10px;
+                font-size: 14px;
+                color: var(--color-text);
+                background: #f9fafb;
                 cursor: pointer;
-                flex-shrink: 0;
+                outline: none;
+                transition: border-color 0.15s, box-shadow 0.15s;
             }
 
-            .sync-label {
-                font-weight: 500;
-                cursor: pointer;
+            select#use_sync:focus {
+                border-color: var(--color-primary);
+                box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
             }
 
-            .sync-hint {
+            .storage-hint {
                 font-size: 12px;
                 color: var(--color-text-muted);
-                margin-top: 4px;
+                margin-top: 6px;
             }
 
             /* Textarea */
@@ -200,14 +207,14 @@
         <h1>SiteBlock Options</h1>
 
         <div class="card">
-            <div id="status"></div>
             <form>
-                <div class="sync-row">
-                    <input type="checkbox" id="use_sync" />
-                    <div>
-                        <label class="sync-label" for="use_sync">Use Chrome sync storage</label>
-                        <div class="sync-hint">Settings will sync across devices when Chrome sync is enabled in your profile.</div>
-                    </div>
+                <div class="storage-row">
+                    <label for="use_sync">Options Profile</label>
+                    <select id="use_sync">
+                        <option value="local">Local</option>
+                        <option value="sync">Sync</option>
+                    </select>
+                    <div class="storage-hint">Sync keeps settings in step across devices when Chrome sync is enabled in your profile.</div>
                 </div>
 
                 <label class="field-label" for="rules">Sites to Block</label>
@@ -217,7 +224,8 @@
                     Unblock for <input type="text" id="allowed" aria-label="Unblock duration in minutes" /> minutes every <input type="text" id="period" aria-label="Period in hours" /> hours.
                 </div>
 
-                <button id="submit" type="button">Save Options</button>
+                <button id="submit" type="button">Save</button>
+                <div id="status"></div>
             </form>
         </div>
 
