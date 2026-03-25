@@ -26,5 +26,8 @@
 node_modules/
 package-lock.json
 
+# Coverage
+coverage/
+
 # Build artifacts
 siteblock-*.zip
