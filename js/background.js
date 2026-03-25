@@ -1,6 +1,7 @@
 // Copyright 2010-2012 Constantine Sapuntzakis
 
 import csapuntz from "./siteblock.js";
+import { resolveUseSyncDefault } from "./options.js";
 
 const sb = csapuntz.siteblock.newSiteBlock();
 /** @type {Promise<void> | null} */
@@ -198,16 +199,7 @@ async function init() {
           console.log(e);
         }
 
-      // Determine whether sync storage should be used.
-      // This is only resolved once (first run / fresh install).
-      // Fresh installs have no "settings" yet → default to sync enabled.
-      // Users migrating from an older version already have "settings" in
-      // local storage → default to sync disabled.
-      if (!("use_sync" in localItems)) {
-        const use_sync = !("settings" in localItems);
-        await chrome.storage.local.set({ use_sync });
-        localItems = { ...localItems, use_sync };
-      }
+      localItems = await resolveUseSyncDefault(localItems);
 
       // Read settings from the active storage (sync or local).
       const items = await getStorageItems(localItems);

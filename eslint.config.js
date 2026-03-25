@@ -28,10 +28,11 @@ export default [
       sourceType: "module",
       globals: {
         ...globals.browser,
+        chrome: "readonly",
       },
     },
     rules: {
-      "no-unused-vars": "warn",
+      "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "no-undef": "error",
       "no-var": "warn",
     },
