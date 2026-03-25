@@ -7,8 +7,8 @@ import {
   save_options,
   on_use_sync_changed,
   on_load,
-  resolveUseSyncDefault,
 } from "./options.js";
+import { resolveUseSyncDefault } from "./storage.js";
 
 // Minimal HTML matching the fields options.js reads/writes
 const OPTIONS_HTML = `

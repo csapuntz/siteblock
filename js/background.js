@@ -1,7 +1,7 @@
 // Copyright 2010-2012 Constantine Sapuntzakis
 
 import csapuntz from "./siteblock.js";
-import { resolveUseSyncDefault } from "./options.js";
+import { resolveUseSyncDefault } from "./storage.js";
 
 const sb = csapuntz.siteblock.newSiteBlock();
 /** @type {Promise<void> | null} */
